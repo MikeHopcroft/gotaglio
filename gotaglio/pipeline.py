@@ -119,6 +119,10 @@ class Pipeline(ABC, metaclass=EnsureSuperInitMeta):
         pass
 
     @abstractmethod
+    def preview(self, results):
+        pass
+
+    @abstractmethod
     def summarize(self, make_console, results):
         pass
 

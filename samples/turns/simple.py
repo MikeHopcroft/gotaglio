@@ -27,13 +27,14 @@ import tiktoken
 # gotaglio package, as if it had been installed.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+from gotaglio.dag import build_dag_from_spec
+from gotaglio.director import process_one_case
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.helpers import IdShortener
 from gotaglio.main import main
 from gotaglio.models import Model
 from gotaglio.pipeline import Internal, Pipeline, Prompt
-from gotaglio.shared import build_template
-
+from gotaglio.shared import build_template, to_json_string
 
 class SimplePipeline(Pipeline):
     # The Pipeline abstract base class requires _name and _description.
@@ -144,6 +145,7 @@ class SimplePipeline(Pipeline):
         async def prepare(context):
             messages = [
                 {"role": "system", "content": await template(context)},
+                {"role": "assistant", "content": str(context["case"]["value"])},
                 {"role": "user", "content": context["case"]["user"]},
             ]
 
@@ -164,25 +166,146 @@ class SimplePipeline(Pipeline):
         async def assess(context):
             return context["stages"]["extract"] - context["case"]["answer"]
 
-        async def preview(context):
-            turn = context["turn"]
-            # if turn is not None:
-            result = glom(context, "stages.extract", None)
-            if result is not None:
-                return result
+        # Define the sub-pipeline spec
+        turn_spec = [
+            {"name": "prepare", "function": prepare, "inputs": []},
+            {"name": "infer", "function": infer, "inputs": ["prepare"]},
+            {"name": "extract", "function": extract, "inputs": ["infer"]},
+            {"name": "assess", "function": assess, "inputs": ["extract"]},
+        ]
+        turn_dag = build_dag_from_spec(turn_spec)
+
+        async def turns(context):
+            turn = glom(context, "turn", default=None)
+            case = context["case"]
+            if not turn:
+                turns = case["turns"]
+                value = case["value"]
             else:
-                return f"Error generating result"
+                turns = [case["turns"][turn]]
+                value = glom(case, f"turns[{turn - 1}].answer", default=None)
+            results = []
+            for turn in turns:
+                turn_case = {
+                    "value": value,
+                    "user": turn["user"],
+                    "answer": turn["answer"],
+                }
+                result = await process_one_case(turn_case, turn_dag, None, turn)
+
+                results.append(result)
+                value = glom(result, "stages.extract", default=None)
+                if result["succeeded"] == False or value is None:
+                    # If the extraction failed, we stop processing remaining turns.
+                    break
+                value = result["stages"]["extract"]
+
+            return results
 
         # The pipeline stages will be executed in the order specified in the
         # dictionary returned by the stages() method. The keys of the
         # dictionary are the names of the stages.
         return {
-            "prepare": prepare,
-            "infer": infer,
-            "extract": extract,
-            "assess": assess,
+            "turns": turns,
         }
 
+    async def preview(context):
+        # When this pipeline is run with turns set, stages.turns will only
+        # contain the results for the specified turn.
+        turn = glom(context, "turn", default=None)
+        if turn is None:
+            raise Exception("No turn specified for preview.")
+        result = glom(context, f"stages.turns[0].extract", default=None) 
+        if result is None:
+            raise Exception(f"Error generating result for turn {turn}")      
+        return result
+
+        # turn = glom(context, "turn", default=None)
+        # if turn is None:
+        #     raise Exception("No turn specified for preview.")
+
+        # result = glom(context, f"turns[{turn}].stages.extract", default=None)
+        # if result is None:
+        #     raise Exception("Error generating result")
+        
+        # return result
+
+    # # This method is used to summarize the results of each a pipeline run.
+    # # It is invoked by the `run`, `rerun`, and `summarize` sub-commands.
+    # def summarize(self, make_console, runlog):
+    #     console = make_console("text/plain")
+    #     results = runlog["results"]
+    #     if len(results) == 0:
+    #         print("No results.")
+    #     else:
+    #         # To make the summary more readable, create a short, unique prefix
+    #         # for each case id.
+    #         short_id = IdShortener([result["case"]["uuid"] for result in results])
+
+    #         # Using Table from the rich text library.
+    #         # https://rich.readthedocs.io/en/stable/introduction.html
+    #         table = Table(title=f"Summary for {runlog['uuid']}")
+    #         table.add_column("id", justify="right", style="cyan", no_wrap=True)
+    #         table.add_column("run", style="magenta")
+    #         table.add_column("score", justify="right", style="green")
+    #         table.add_column("keywords", justify="left", style="green")
+
+    #         # Set up some counters for totals to be presented after the table.
+    #         total_count = len(results)
+    #         complete_count = 0
+    #         passed_count = 0
+    #         failed_count = 0
+    #         error_count = 0
+
+    #         # Add one row for each case.
+    #         for result in results:
+    #             succeeded = result["succeeded"]
+    #             cost = result["stages"]["assess"] if succeeded else None
+
+    #             if succeeded:
+    #                 complete_count += 1
+    #                 if cost == 0:
+    #                     passed_count += 1
+    #                 else:
+    #                     failed_count += 1
+    #             else:
+    #                 error_count += 1
+
+    #             complete = (
+    #                 Text("COMPLETE", style="bold green")
+    #                 if succeeded
+    #                 else Text("ERROR", style="bold red")
+    #             )
+    #             cost_text = "" if cost == None else f"{cost:.2f}"
+    #             score = (
+    #                 Text(cost_text, style="bold green")
+    #                 if cost == 0
+    #                 else Text(cost_text, style="bold red")
+    #             )
+    #             keywords = (
+    #                 ", ".join(sorted(result["case"]["keywords"]))
+    #                 if "keywords" in result["case"]
+    #                 else ""
+    #             )
+    #             table.add_row(short_id(result["case"]["uuid"]), complete, score, keywords)
+
+    #         # Display the table and the totals.
+    #         console.print(table)
+    #         console.print()
+    #         console.print(f"Total: {total_count}")
+    #         console.print(
+    #             f"Complete: {complete_count}/{total_count} ({(complete_count/total_count)*100:.2f}%)"
+    #         )
+    #         console.print(
+    #             f"Error: {error_count}/{total_count} ({(error_count/total_count)*100:.2f}%)"
+    #         )
+    #         console.print(
+    #             f"Passed: {passed_count}/{total_count} ({(passed_count/total_count)*100:.2f}%)"
+    #         )
+    #         console.print(
+    #             f"Failed: {failed_count}/{total_count} ({(failed_count/total_count)*100:.2f}%)"
+    #         )
+    #         console.print()
 
     # This method is used to summarize the results of each a pipeline run.
     # It is invoked by the `run`, `rerun`, and `summarize` sub-commands.
@@ -190,7 +313,7 @@ class SimplePipeline(Pipeline):
         console = make_console("text/plain")
         results = runlog["results"]
         if len(results) == 0:
-            print("No results.")
+            console.print("No results.")
         else:
             # To make the summary more readable, create a short, unique prefix
             # for each case id.
@@ -203,6 +326,7 @@ class SimplePipeline(Pipeline):
             table.add_column("run", style="magenta")
             table.add_column("score", justify="right", style="green")
             table.add_column("keywords", justify="left", style="green")
+            table.add_column("user", justify="left", style="green")
 
             # Set up some counters for totals to be presented after the table.
             total_count = len(results)
@@ -213,35 +337,45 @@ class SimplePipeline(Pipeline):
 
             # Add one row for each case.
             for result in results:
-                succeeded = result["succeeded"]
-                cost = result["stages"]["assess"] if succeeded else None
+                for index, turn_result in enumerate(result["stages"]["turns"]):
+                    succeeded = turn_result["succeeded"]
+                    cost = (
+                        turn_result["stages"]["assess"] if succeeded else None # TODO: configurable
+                    )
 
-                if succeeded:
-                    complete_count += 1
-                    if cost == 0:
-                        passed_count += 1
+                    if succeeded:
+                        complete_count += 1
+                        if cost == 0:
+                            passed_count += 1
+                        else:
+                            failed_count += 1
                     else:
-                        failed_count += 1
-                else:
-                    error_count += 1
+                        error_count += 1
 
-                complete = (
-                    Text("COMPLETE", style="bold green")
-                    if succeeded
-                    else Text("ERROR", style="bold red")
-                )
-                cost_text = "" if cost == None else f"{cost:.2f}"
-                score = (
-                    Text(cost_text, style="bold green")
-                    if cost == 0
-                    else Text(cost_text, style="bold red")
-                )
-                keywords = (
-                    ", ".join(sorted(result["case"]["keywords"]))
-                    if "keywords" in result["case"]
-                    else ""
-                )
-                table.add_row(short_id(result["case"]["uuid"]), complete, score, keywords)
+                    complete = (
+                        Text("COMPLETE", style="bold green")
+                        if succeeded
+                        else Text("ERROR", style="bold red")
+                    )
+                    cost_text = "" if cost == None else f"{cost:.2f}"
+                    score = (
+                        Text(cost_text, style="bold green")
+                        if cost == 0
+                        else Text(cost_text, style="bold red")
+                    )
+                    keywords = (
+                        ", ".join(sorted(result["case"]["keywords"]))
+                        if "keywords" in result["case"]
+                        else ""
+                    )
+                    user = result["case"]["turns"][index]["user"]   # TODO: configurable
+                    table.add_row(
+                        f"{short_id(result['case']['uuid'])}.{index:02}",
+                        complete,
+                        score,
+                        keywords,
+                        user
+                    )
 
             # Display the table and the totals.
             console.print(table)
@@ -262,15 +396,74 @@ class SimplePipeline(Pipeline):
             console.print()
 
 
+    # # If uuid_prefix is specified, format those cases whose uuids start with
+    # # uuid_prefix. Otherwise, format all cases.
+    # def format(self, make_console, runlog, uuid_prefix):
+    #     console = make_console("text/markdown")
+
+    #     # Lazily load the GPT-4o tokenizer here so that we don't slow down
+    #     # other scenarios that don't need it.
+    #     if not hasattr(self, "_tokenizer"):
+    #         self._tokenizer = tiktoken.get_encoding("cl100k_base")
+
+    #     results = runlog["results"]
+    #     if len(results) == 0:
+    #         console.print("No results.")
+    #     else:
+    #         # To make the summary more readable, create a short, unique prefix
+    #         # for each case id.
+    #         short_id = IdShortener([result["case"]["uuid"] for result in results])
+
+    #         console.print(f"# Run {runlog['uuid']}")
+    #         for result in results:
+    #             if uuid_prefix and not result["case"]["uuid"].startswith(uuid_prefix):
+    #                 continue
+    #             console.print(f"## Case: {short_id(result['case']['uuid'])}")
+
+    #             if result["succeeded"]:
+    #                 if result["stages"]["assess"] == 0:
+    #                     console.print("**PASSED**  ")
+    #                 else:
+    #                     console.print(f"**FAILED**: expected {result['case']['answer']}, got {result['stages']['extract']}  ")
+
+    #                 input_tokens = sum(
+    #                     len(self._tokenizer.encode(message["content"]))
+    #                     for message in result["stages"]["prepare"]
+    #                 )
+    #                 console.print(
+    #                     f"Input tokens: {input_tokens}, output tokens: {len(self._tokenizer.encode(result['stages']['infer']))}"
+    #                 )
+
+    #                 console.print()
+    #                 for message in result["stages"]["prepare"]:
+    #                     console.print(f"**{message['role']}**: {message['content']}\n")
+    #                 console.print(f"**assistant**: {result['stages']['extract']}")
+    #             else:
+    #                 console.print(f"\n~~~bash")
+    #                 console.print(f"Error: {result['exception']['message']}")
+    #                 # console.print(f"Inference: {result['stages']['infer']}")
+    #                 console.print(f"Traceback: {result['exception']['traceback']}")
+    #                 console.print(f"Time: {result['exception']['time']}")
+    #                 console.print("~~~\n")
+
     # If uuid_prefix is specified, format those cases whose uuids start with
     # uuid_prefix. Otherwise, format all cases.
     def format(self, make_console, runlog, uuid_prefix):
         console = make_console("text/markdown")
-
         # Lazily load the GPT-4o tokenizer here so that we don't slow down
         # other scenarios that don't need it.
         if not hasattr(self, "_tokenizer"):
             self._tokenizer = tiktoken.get_encoding("cl100k_base")
+
+        # compress = (
+        #     str(glom(runlog, "metadata.pipeline.prepare.compress", default="False"))
+        #     == "True"
+        # )
+
+        # complete = format_menu(self.type_defs, compress)
+        # complete_tokens = len(self._tokenizer.encode(complete))
+
+        console.print(f"## Run: {runlog['uuid']}")
 
         results = runlog["results"]
         if len(results) == 0:
@@ -280,37 +473,82 @@ class SimplePipeline(Pipeline):
             # for each case id.
             short_id = IdShortener([result["case"]["uuid"] for result in results])
 
-            console.print(f"# Run {runlog['uuid']}")
             for result in results:
                 if uuid_prefix and not result["case"]["uuid"].startswith(uuid_prefix):
                     continue
-                console.print(f"## Case: {short_id(result['case']['uuid'])}")
+                turn_count = f" ({len(result['stages']['turns'])} turn{'s' if len(result['stages']['turns']) != 1 else ''})"
+                console.print(f"## Case: {short_id(result['case']['uuid'])}{turn_count}")
+                console.print(
+                    f"**Keywords:** {', '.join(result['case'].get('keywords', []))}  "
+                )
+                console.print()
 
-                if result["succeeded"]:
-                    if result["stages"]["assess"] == 0:
-                        console.print("**PASSED**  ")
+                for index, turn_result in enumerate(result["stages"]["turns"]):
+                    if index > 0:
+                        console.print("---")
                     else:
-                        console.print(f"**FAILED**: expected {result['case']['answer']}, got {result['stages']['extract']}  ")
+                        console.print()
+                    if turn_result["succeeded"]:
+                        cost = turn_result["stages"]["assess"] # TODO: configurable
+                        if cost == 0:
+                            console.print(f"### Turn {index + 1}: **PASSED**  ")
+                        else:
+                            console.print(
+                                f"### Turn {index + 1}: **FAILED:** cost={cost}  "
+                            )
+                        console.print()
 
-                    input_tokens = sum(
-                        len(self._tokenizer.encode(message["content"]))
-                        for message in result["stages"]["prepare"]
-                    )
-                    console.print(
-                        f"Input tokens: {input_tokens}, output tokens: {len(self._tokenizer.encode(result['stages']['infer']))}"
-                    )
+                        input_tokens = sum(
+                            len(self._tokenizer.encode(message["content"]))
+                            for message in turn_result["stages"]["prepare"] # TODO: configurable ["messages"]
+                        )
+                        # console.print(f"Complete menu tokens: {complete_tokens}  ")
+                        console.print(
+                            f"Input tokens: {input_tokens}, output tokens: {len(self._tokenizer.encode(turn_result['stages']['infer']))}"
+                        )
+                        console.print()
 
-                    console.print()
-                    for message in result["stages"]["prepare"]:
-                        console.print(f"**{message['role']}**: {message['content']}\n")
-                    console.print(f"**assistant**: {result['stages']['extract']}")
-                else:
-                    console.print(f"\n~~~bash")
-                    console.print(f"Error: {result['exception']['message']}")
-                    # console.print(f"Inference: {result['stages']['infer']}")
-                    console.print(f"Traceback: {result['exception']['traceback']}")
-                    console.print(f"Time: {result['exception']['time']}")
-                    console.print("~~~\n")
+                        for x in turn_result["stages"]["prepare"]: # TODO: configurable ["messages"]
+                            if x["role"] == "assistant" or x["role"] == "system":  # TODO: configurable
+                                console.print(f"**{x['role']}:**")
+                                console.print("```json")
+                                console.print(x["content"])
+                                console.print("```")
+                            elif x["role"] == "user":
+                                console.print(f"**{x['role']}:** _{x['content']}_")
+                            console.print()
+                        console.print(f"**assistant:**")
+                        console.print("```json")
+                        console.print(
+                            to_json_string(turn_result["stages"]["extract"])
+                        )
+                        console.print("```")
+                        console.print()
+
+                        if cost > 0:
+                            console.print(f"**expected {turn_result["case"]["answer"]}:**")
+                            # console.print("**Repairs:**")
+                            # for step in turn_result["stages"]["assess"]["steps"]:
+                            #     console.print(f"* {step}")
+                        # else:
+                        #     console.print("**No repairs**")
+
+                        console.print()
+                        # console.print("**Pruning query**:")
+                        # for x in turn_result["stages"]["prepare"]["full_query"]:
+                        #     console.print(f"* {x}")
+                        # console.print()
+
+                    else:
+                        console.print(f"### Turn {index + 1}: **ERROR**  ")
+                        console.print(f"Error: {turn_result['exception']['message']}")
+                        console.print("~~~")
+                        console.print(
+                            f"Traceback: {turn_result['exception']['traceback']}"
+                        )
+                        console.print(f"Time: {turn_result['exception']['time']}")
+                        console.print("~~~")
+
 
 
     def compare(self, make_console, a, b):

@@ -1,5 +1,25 @@
 # TODO
 
+* Today
+  * Configurable pipeline with turns
+    * Configurable
+      * Initial value field
+      * "user" field for summarize()
+      * tokenizer
+      * repairs
+    * mechanism to override summarize() and format()
+    * compare() method
+  * Lazily load tokenizer
+  * Better error formatting in notebooks
+    * e.g. missing models.json or .credentials.json
+    * gt.run() should write log file, even if summarize() crashes.
+  * Understand system configuration options
+    * Perhaps have an override for turn count
+  * Run individual pipeline turns - for service
+  * Read and write JSON or YAML
+    * Extension detect
+    * utf-8 handling
+    * System config for output format when no extension specified
 * Top top
   * [Poetry vs uv](https://teams.microsoft.com/l/message/19:f470c3664251434a981ea790c11c7b61@thread.tacv2/1741214705520?tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47&groupId=11dded2c-9d9a-470c-a312-e8eeceb5a1ab&parentMessageId=1741214705520&teamName=IS%20Engineering&channelName=GUILD%20-%20Software%20Engineering&createdTime=1741214705520)
   * Consider jsonl for cases
