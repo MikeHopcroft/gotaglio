@@ -1,5 +1,5 @@
 from pydantic import BaseModel, validator, Field
-from typing import Any, Dict, Callable, List, Optional, Union
+from typing import Any, Dict, Callable, List, Union
 
 
 class TurnSpec(BaseModel):
@@ -39,29 +39,7 @@ class PipelineSpec(BaseModel):
     summarize: Union[SummarizerSpec, Callable] = Field(
         ..., description="Optional summarizer spec or function"
     )
-    # Format
-    # Compare
 
+    # TODO: Format
 
-# def cell_contents():
-#     return "Cell content goes here"
-
-# def go():
-#     # x = ColumnSpec(name="A", contents=cell_contents)
-#     # y = PipelineSpec(name="B", summarize=[x])
-#     # print(y)
-#     spec = PipelineSpec(
-#         name="calculator",
-#         description="A simple calculator pipeline",
-#         configuration={"precision": 2},
-#         turns=TurnSpec(
-#             initial="value",
-#             expected="expected",
-#             observed="extract"
-#         ),
-#         create_dag=lambda name, config: lambda x: x,  # Dummy DAG function
-#         summarize=[ColumnSpec(name="Result", contents=cell_contents)],
-#     )
-#     print(spec)
-
-# go()
+    #  Compare

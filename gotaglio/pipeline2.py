@@ -12,7 +12,7 @@ class Pipeline2:
     def __init__(self, spec: PipelineSpec, replacement_config, flat_config_patch):
         self._turn_spec = spec.turns
         self._summarizer = spec.summarize
-        
+
         # Merge and validate configurations.
         self._config = apply_patch(
             (
@@ -98,6 +98,7 @@ class Internal:
         pass
 
 
+# TODO: where is this used? Compare?
 def format_config(x):
     if isinstance(x, Prompt):
         return "PROMPT"
