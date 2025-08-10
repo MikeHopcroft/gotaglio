@@ -5,6 +5,15 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "test_pipeline_spec",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "samples/test_pipeline_spec.py",
+      "console": "integratedTerminal",
+      "args": [
+      ]
+    },
+    {
       "name": "simple",
       "type": "debugpy",
       "request": "launch",
