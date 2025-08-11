@@ -4,6 +4,7 @@ from .dag import build_dag_from_spec
 from .director import process_one_case
 from .exceptions import ExceptionContext
 from .mocks import Flakey, Perfect
+from .registry import Registry
 from .shared import apply_patch, flatten_dict
 from .pipeline_spec import PipelineSpec, TurnMappingSpec
 from .summarize import summarize
@@ -11,7 +12,7 @@ from .summarize import summarize
 
 class Pipeline2:
     def __init__(
-        self, spec: PipelineSpec, replacement_config, flat_config_patch, registry
+        self, spec: PipelineSpec, replacement_config, flat_config_patch, global_registry
     ):
         self._turn_spec = spec.turns
         self._summarizer = spec.summarize
@@ -30,8 +31,7 @@ class Pipeline2:
         # Construct and register some model mocks, specific to this pipeline.
         # NOTE: this must be done before spec.create_dag, which accesses
         # models from the registry.
-        # TODO: what happens if Pipeline is constructed a second time?
-        # TOOD: we don't really want to register these models globally.
+        registry = Registry(global_registry)
         Flakey(registry, {})
         Perfect(registry, {})
 

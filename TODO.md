@@ -1,7 +1,12 @@
 # TODO
 
 * Today
-  * Pipelines should have the ability to locally register models.
+  * # TODO: move these functions out of registry.
+  * x Pipelines should have the ability to locally register models.
+  * Extensible format
+  * Extensible compare
+  * Rewrite samples
+  * Type annotations everywhere
   * x In pipeline2.py, line 77: "user": turn["user"], # TODO: configurable
   * x Summary
     * x Complete: 6/2 (300.00%) - two cases with three steps each
@@ -10,11 +15,8 @@
   * x Log logs\43131cfe-1627-4d6f-ae48-5e4ee5527934.json shows `turn` object and `case` object
   * x Rename TurnSpec to TurnMapping?
     * x Can't copy/remap all fields - should instead get fields from case. e.g. need `user` and `base`
-  * Extensible format
-  * Extensible compare
   * x Extensible perfect and flakey models
   * Exception when `expected != "answer"` - summary has no rows
-  * Rewrite samples
   * Path to models.json and .credentials.json
 * Before
   * Configurable pipeline with turns
