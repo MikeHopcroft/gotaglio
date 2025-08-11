@@ -4,12 +4,12 @@ from rich.text import Text
 from typing import Any, Dict, Callable, Optional
 
 from .helpers import IdShortener
-from .pipeline_spec import column_spec, SummarizerSpec, TurnSpec
+from .pipeline_spec import column_spec, SummarizerSpec, TurnMappingSpec
 
 
 def summarize(
     summarizer_spec: SummarizerSpec,
-    turn_spec: Optional[TurnSpec],
+    turn_spec: Optional[TurnMappingSpec],
     make_console: Callable,
     runlog: Dict[str, Any],
 ):
@@ -19,7 +19,7 @@ def summarize(
 
 class Summarizer:
     def __init__(
-        self, summarizer_spec: SummarizerSpec, turn_spec: Optional[TurnSpec] = None
+        self, summarizer_spec: SummarizerSpec, turn_spec: Optional[TurnMappingSpec] = None
     ):
         self._summarizer_spec = summarizer_spec
         self._turn_spec = turn_spec

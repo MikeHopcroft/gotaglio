@@ -7,8 +7,8 @@
     * x Pass/fail predicate
     * x keywords column
   * Log logs\43131cfe-1627-4d6f-ae48-5e4ee5527934.json shows `turn` object and `case` object
-  * Rename TurnSpec to TurnMapping?
-    * Can't copy/remap all fields - should instead get fields from case. e.g. need `user` and `base`
+  * x Rename TurnSpec to TurnMapping?
+    * x Can't copy/remap all fields - should instead get fields from case. e.g. need `user` and `base`
   * Extensible format
   * Extensible compare
   * Extensible perfect and flakey models

@@ -12,7 +12,12 @@ from gotaglio.dag import build_dag_from_spec
 from gotaglio.director2 import Director2
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.make_console import MakeConsole
-from gotaglio.pipeline_spec import PipelineSpec, SummarizerSpec, TurnSpec, ColumnSpec
+from gotaglio.pipeline_spec import (
+    PipelineSpec,
+    SummarizerSpec,
+    TurnMappingSpec,
+    ColumnSpec,
+)
 from gotaglio.pipeline2 import Internal, Pipeline2, Prompt
 from gotaglio.registry import Registry
 from gotaglio.shared import build_template, to_json_string
@@ -131,7 +136,9 @@ spec = PipelineSpec(
             }
         },
     },
-    turns=TurnSpec(initial="value", expected="answer", observed="extract", user="user"),
+    turns=TurnMappingSpec(
+        initial="value", expected="answer", observed="extract", user="user"
+    ),
     create_dag=create_dag,
     summarize=SummarizerSpec(
         columns=[

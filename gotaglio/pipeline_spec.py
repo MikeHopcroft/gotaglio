@@ -2,7 +2,7 @@ from pydantic import BaseModel, validator, Field
 from typing import Any, Dict, Callable, List, Union
 
 
-class TurnSpec(BaseModel):
+class TurnMappingSpec(BaseModel):
     initial: str = Field(..., min_length=1, description="Initial turn value")
     expected: str = Field(..., min_length=1, description="Expected turn value")
     observed: str = Field(..., min_length=1, description="Observed turn value")
@@ -39,7 +39,7 @@ class PipelineSpec(BaseModel):
     create_dag: Callable[[str, Dict[str, Any], Any], Any] = Field(
         ..., description="Function to create the DAG"
     )
-    turns: TurnSpec = Field(None, description="Optional turns configuration")
+    turns: TurnMappingSpec = Field(None, description="Optional turns configuration")
     summarize: Union[SummarizerSpec, Callable] = Field(
         ..., description="Optional summarizer spec or function"
     )

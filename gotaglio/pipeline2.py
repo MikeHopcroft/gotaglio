@@ -4,7 +4,7 @@ from .dag import build_dag_from_spec
 from .director import process_one_case
 from .exceptions import ExceptionContext
 from .shared import apply_patch, flatten_dict
-from .pipeline_spec import PipelineSpec, TurnSpec
+from .pipeline_spec import PipelineSpec, TurnMappingSpec
 from .summarize import summarize
 
 
@@ -48,7 +48,7 @@ class Pipeline2:
             summarize(self._summarizer, self._turn_spec, make_console, runlog)
 
 
-def create_turns_dag(turn_spec: TurnSpec, turn_dag):
+def create_turns_dag(turn_spec: TurnMappingSpec, turn_dag):
     async def turns(context):
         initial = turn_spec.initial
         expected = turn_spec.expected
