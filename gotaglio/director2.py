@@ -128,7 +128,7 @@ class Director2:
         # print(f"Results written to {self._output_file}")
 
 
-async def process_one_case(case, dag, completed, turn=None):
+async def process_one_case(case, dag, completed):
     ExceptionContext.clear_context()
     start = datetime.now().timestamp()
     result = {
@@ -137,8 +137,6 @@ async def process_one_case(case, dag, completed, turn=None):
         "case": case,
         "stages": {},
     }
-    if turn:
-        result["turn"] = turn
 
     try:
         await run_dag(dag, result)

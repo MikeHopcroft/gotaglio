@@ -26,6 +26,7 @@ from gotaglio.summarize import keywords_column
 
 # The structure of the pipeline is defined by the stages() method.
 # This example demonstrates a simple, linear pipeline with four stages.
+# NOTE: unused pipeline name parameter was passed for error message formatting.
 def create_dag(name, config, registry):
     #
     # Perform some setup here so that any initialization errors encountered
@@ -175,7 +176,7 @@ cases = [
 
 flat_config_patch = {
     "prepare.template": "samples/turns/template.txt",
-    "infer.model.name": "gpt4o",
+    "infer.model.name": "perfect",  # "gpt4o",
 }
 
 max_concurrency = 1

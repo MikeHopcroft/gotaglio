@@ -3,6 +3,7 @@ from glom import glom
 from .dag import build_dag_from_spec
 from .director import process_one_case
 from .exceptions import ExceptionContext
+from .mocks import Flakey, Perfect
 from .shared import apply_patch, flatten_dict
 from .pipeline_spec import PipelineSpec, TurnMappingSpec
 from .summarize import summarize
@@ -25,6 +26,14 @@ class Pipeline2:
             flat_config_patch,
         )
         ensure_required_configs(spec.name, spec.configuration, self._config)
+
+        # Construct and register some model mocks, specific to this pipeline.
+        # NOTE: this must be done before spec.create_dag, which accesses
+        # models from the registry.
+        # TODO: what happens if Pipeline is constructed a second time?
+        # TOOD: we don't really want to register these models globally.
+        Flakey(registry, {})
+        Perfect(registry, {})
 
         # Create the DAG.
         turn_dag = spec.create_dag(spec.name, self._config, registry)
@@ -73,17 +82,10 @@ def create_turns_dag(turn_spec: TurnMappingSpec, turn_dag):
 
         results = []
         for turn in turns:
-            # TODO: want to copy turn and then add the initial value from case[initial]
             turn_case = turn.copy()
             turn_case[initial] = value
-            # turn_case = {
-            #     initial: value,
-            #     user: turn[user],
-            #     # TODO: following line can throw an exception if expected is not in turn
-            #     expected: turn[expected],
-            # }
 
-            result = await process_one_case(turn_case, turn_dag, None, turn)
+            result = await process_one_case(turn_case, turn_dag, None)
 
             results.append(result)
             value = glom(result, f"stages.{observed}", default=None)
