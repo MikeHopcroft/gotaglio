@@ -9,7 +9,9 @@ from .summarize import summarize
 
 
 class Pipeline2:
-    def __init__(self, spec: PipelineSpec, replacement_config, flat_config_patch):
+    def __init__(
+        self, spec: PipelineSpec, replacement_config, flat_config_patch, registry
+    ):
         self._turn_spec = spec.turns
         self._summarizer = spec.summarize
 
@@ -25,13 +27,19 @@ class Pipeline2:
         ensure_required_configs(spec.name, spec.configuration, self._config)
 
         # Create the DAG.
-        turn_dag = spec.create_dag(spec.name, self._config)
+        turn_dag = spec.create_dag(spec.name, self._config, registry)
         if spec.turns is not None:
             # Wrap the single-turn DAG to handle multiple turns.
-            self.dag = create_turns_dag(spec.turns, turn_dag)
+            self._dag = create_turns_dag(spec.turns, turn_dag)
         else:
             # Just running a single turn.
             self._dag = turn_dag
+
+    def get_config(self):
+        return self._config
+
+    def get_dag(self):
+        return self._dag
 
     def summarize(self, make_console, runlog):
         if callable(self._summarizer):

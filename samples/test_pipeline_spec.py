@@ -1,3 +1,4 @@
+import asyncio
 from glom import glom
 import os
 import sys
@@ -7,15 +8,17 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from gotaglio.dag import build_dag_from_spec
+from gotaglio.director2 import Director2
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.make_console import MakeConsole
 from gotaglio.pipeline_spec import PipelineSpec, SummarizerSpec, TurnSpec, ColumnSpec
-from gotaglio.pipeline2 import Pipeline2
+from gotaglio.pipeline2 import Internal, Pipeline2, Prompt
+from gotaglio.registry import Registry
 from gotaglio.shared import build_template, to_json_string
 
 # The structure of the pipeline is defined by the stages() method.
 # This example demonstrates a simple, linear pipeline with four stages.
-def create_dag(config, registry):
+def create_dag(name, config, registry):
     #
     # Perform some setup here so that any initialization errors encountered
     # are caught before running the cases.
@@ -91,20 +94,66 @@ def user_cell(result, turn_index):
 spec = PipelineSpec(
     name="calculator",
     description="A simple calculator pipeline",
-    configuration={"base": 10},
-    turns=TurnSpec(initial="value", expected="expected", observed="extract"),
-    create_dag=create_dag
+    configuration={
+        "prepare": {
+            "template": Prompt("Template file for system message"),
+            "template_text": Internal()
+            },
+        "infer": {
+            "model": {
+                "name": Prompt("Model name to use for inference stage"),
+                "settings": {
+                    "max_tokens": 800,
+                    "temperature": 0.7,
+                    "top_p": 0.95,
+                    "frequency_penalty": 0,
+                    "presence_penalty": 0,
+                }
+            }
+        }
+    },
+    turns=TurnSpec(initial="value", expected="answer", observed="extract"),
+    create_dag=create_dag,
     summarize=SummarizerSpec(columns=[ColumnSpec(name="user", contents=user_cell)])
 )
 
-def go2():
-    pipeline = Pipeline2(spec, None, {"precision": 3})
+cases = [
+  {
+    "uuid": "ed6ceb29-b4b9-427c-99b8-635984198a59",
+    "keywords": ["mutli-turn"],
+    "value": 0,
+    "turns": [
+      { "user": "1+1", "base": 10, "answer": 2 },
+      { "user": "add one hundred", "base": 10, "answer": 102 },
+      { "user": "divide by two", "base": 10, "answer": 51 }
+    ]
+  }
+]
 
+flat_config_patch = {
+    "prepare.template": "samples/turns/template.txt",
+    "infer.model.name": "gpt4o"
+}
+
+max_concurrency = 1
+
+def go2():
+    director = Director2(spec, cases, {}, flat_config_patch, max_concurrency)
+    progress = None
+    completed = None
+    asyncio.run(director.process_all_cases(progress, completed))
+    print("done")
+    director.write_results()
+    director.summarize_results()
+    print("done2")
+    # registry = Registry()
+    # pipeline = Pipeline2(spec, None, {"prepare.template": "samples/turns/template.txt", "infer.model.name": "perfect"}, registry)
 
 def go1():
     print(spec)
 
-    pipeline = Pipeline2(spec, None, {"precision": 3})
+    registry = Registry()
+    pipeline = Pipeline2(spec, None, {"precision": 3}, registry)
     print(pipeline)
 
     runlog = {
@@ -136,4 +185,4 @@ def go1():
     pipeline.summarize(console, runlog)
     console.render()
 
-go()
+go2()

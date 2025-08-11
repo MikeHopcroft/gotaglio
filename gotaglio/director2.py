@@ -13,15 +13,19 @@ from .exceptions import ExceptionContext
 from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener
 from .make_console import MakeConsole
+from .models import register_models
+from .pipeline2 import Pipeline2
+from .pipeline_spec import PipelineSpec
+from .registry import Registry
 from .shared import write_json_file
 
-CompileError()
-WorkInProgress()
+# CompileError()
+# WorkInProgress()
 
-class Director:
+class Director2:
     def __init__(
         self,
-        pipeline_spec,
+        pipeline_spec: PipelineSpec,
         cases,
         replacement_config,
         flat_config_patch,
@@ -31,17 +35,14 @@ class Director:
         self._pipeline_spec = pipeline_spec
         self._concurrancy = max_concurrancy
 
-        registry = registry_factory()
-        pipeline_factory = registry.pipeline(pipeline_name)
-        self._pipeline = pipeline_factory(
-            registry, replacement_config, flat_config_patch
-        )
+        
+        registry = Registry()
+        register_models(registry)
 
-        stages = self._pipeline.stages()
-        spec = dag_spec_from_linear(stages) if isinstance(stages, dict) else stages
-        self._dag = build_dag_from_spec(spec)
+        self._pipeline = Pipeline2(pipeline_spec, replacement_config, flat_config_patch, registry)
+        self._dag = self._pipeline.get_dag()
 
-        self._config = self._pipeline.config()
+        # self._config = self._pipeline.config()
 
         self._id = uuid.uuid4()
         self._output_file = os.path.join(
@@ -52,7 +53,7 @@ class Director:
             "command": " ".join(sys.argv),
             "start": str(datetime.fromtimestamp(self._start, timezone.utc)),
             "concurrency": self._concurrancy,
-            "pipeline": {"name": pipeline_spec["name"], "config": self._pipeline._config},
+            "pipeline": {"name": pipeline_spec.name, "config": self._pipeline.get_config()},
         }
         self._results = {
             "results": {},

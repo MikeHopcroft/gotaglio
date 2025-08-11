@@ -1,6 +1,14 @@
 # TODO
 
 * Today
+  * Pass/fail predicate
+  * Exception when `expcted != "answer"` - summary has no rows
+  * Log logs\43131cfe-1627-4d6f-ae48-5e4ee5527934.json shows `turn` object and `case` object
+  * Extensible format
+  * Extensible compare
+  * Extensible perfect and flakey models
+  * Path to models.json and .credentials.json
+* Before
   * Configurable pipeline with turns
     * Configurable
       * Initial value field

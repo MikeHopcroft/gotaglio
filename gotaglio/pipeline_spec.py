@@ -32,7 +32,7 @@ class PipelineSpec(BaseModel):
     name: str = Field(..., min_length=1, description="Pipeline name")
     description: str = Field(..., min_length=1, description="Pipeline description")
     configuration: Dict[str, Any] = Field(..., description="Pipeline configuration")
-    create_dag: Callable[[str, Dict[str, Any]], Any] = Field(
+    create_dag: Callable[[str, Dict[str, Any], Any], Any] = Field(
         ..., description="Function to create the DAG"
     )
     turns: TurnSpec = Field(None, description="Optional turns configuration")
