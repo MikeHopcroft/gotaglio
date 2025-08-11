@@ -1,5 +1,5 @@
-from pydantic import BaseModel, validator, Field
-from typing import Any, Dict, Callable, List, Union
+from pydantic import BaseModel, Field
+from typing import Any, Callable
 
 
 class TurnMappingSpec(BaseModel):
@@ -11,36 +11,46 @@ class TurnMappingSpec(BaseModel):
 
 class ColumnSpec(BaseModel):
     name: str = Field(..., min_length=1, description="Column name")
-    params: Dict[str, Any] = Field(
+    params: dict[str, Any] = Field(
         {}, description="Rich formatting parameters for the column"
     )
-    contents: Callable[[Dict[str, Any]], Any] = Field(
+    contents: Callable[[dict[str, Any]], Any] = Field(
         ..., description="Function to create the cell contents"
     )
 
 
 def column_spec(
-    name: str, contents: Callable[[Dict[str, Any]], Any], **kwargs
+    name: str, contents: Callable[[dict[str, Any]], Any], **kwargs
 ) -> ColumnSpec:
     return ColumnSpec(name=name, contents=contents, params=kwargs)
 
 
+class FormatterSpec(BaseModel):
+    frontmatter: Callable[[dict[str, Any]], None] = Field(
+        default=None, description="Function to format the frontmatter"
+    )
+
+
 class SummarizerSpec(BaseModel):
-    columns: List[ColumnSpec] = Field([], description="List of columns to summarize")
-    passed: Callable[[Dict[str, Any]], bool] = Field(
-        default=lambda result: False, description="Function to determine if the summarization passed"
+    columns: list[ColumnSpec] = Field([], description="List of columns to summarize")
+    passed: Callable[[dict[str, Any]], bool] = Field(
+        default=lambda result: False,
+        description="Function to determine if the summarization passed",
     )
 
 
 class PipelineSpec(BaseModel):
     name: str = Field(..., min_length=1, description="Pipeline name")
     description: str = Field(..., min_length=1, description="Pipeline description")
-    configuration: Dict[str, Any] = Field(..., description="Pipeline configuration")
-    create_dag: Callable[[str, Dict[str, Any], Any], Any] = Field(
+    configuration: dict[str, Any] = Field(..., description="Pipeline configuration")
+    create_dag: Callable[[str, dict[str, Any], Any], Any] = Field(
         ..., description="Function to create the DAG"
     )
     turns: TurnMappingSpec = Field(None, description="Optional turns configuration")
-    summarize: Union[SummarizerSpec, Callable] = Field(
+    format: FormatterSpec | Callable = Field(
+        default=None, description="Optional formatter spec or function"
+    )
+    summarize: SummarizerSpec | Callable = Field(
         ..., description="Optional summarizer spec or function"
     )
 

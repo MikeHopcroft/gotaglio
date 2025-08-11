@@ -1,7 +1,7 @@
 from glom import glom
 from rich.table import Table
 from rich.text import Text
-from typing import Any, Dict, Callable, Optional
+from typing import Any, Callable
 
 from .helpers import IdShortener
 from .pipeline_spec import column_spec, SummarizerSpec, TurnMappingSpec
@@ -9,9 +9,9 @@ from .pipeline_spec import column_spec, SummarizerSpec, TurnMappingSpec
 
 def summarize(
     summarizer_spec: SummarizerSpec,
-    turn_spec: Optional[TurnMappingSpec],
+    turn_spec: TurnMappingSpec | None,
     make_console: Callable,
-    runlog: Dict[str, Any],
+    runlog: dict[str, Any],
 ):
     s = Summarizer(summarizer_spec, turn_spec)
     s.summarize(make_console, runlog)
@@ -19,7 +19,9 @@ def summarize(
 
 class Summarizer:
     def __init__(
-        self, summarizer_spec: SummarizerSpec, turn_spec: Optional[TurnMappingSpec] = None
+        self,
+        summarizer_spec: SummarizerSpec,
+        turn_spec: TurnMappingSpec | None = None,
     ):
         self._summarizer_spec = summarizer_spec
         self._turn_spec = turn_spec
@@ -134,14 +136,6 @@ class Summarizer:
         else:
             self.error_count += 1
 
-        # TODO:   reinstate the cost calculation logic.
-        # cost_text = "" if cost == None else f"{cost:.2f}"
-        # score = (
-        #     Text(cost_text, style="bold green")
-        #     if cost == 0
-        #     else Text(cost_text, style="bold red")
-        # )
-        # user = turn_result["case"]["turns"][index]["user"]   # TODO: configurable
         row = [col.contents(result, turn_index) for col in columns]
         table.add_row(*row)
 
@@ -152,5 +146,6 @@ def keywords_cell(result, turn_index):
         if "keywords" in result["case"]
         else ""
     )
+
 
 keywords_column = column_spec(name="keywords", contents=keywords_cell)

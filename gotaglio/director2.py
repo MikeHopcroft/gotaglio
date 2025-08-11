@@ -1,14 +1,13 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
-import json
 import os
-import re
 import sys
 import traceback
+from typing import Any, List
 import uuid
 
 from .constants import app_configuration
-from .dag import build_dag_from_spec, dag_spec_from_linear, run_dag
+from .dag import run_dag
 from .exceptions import ExceptionContext
 from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener
@@ -19,30 +18,27 @@ from .pipeline_spec import PipelineSpec
 from .registry import Registry
 from .shared import write_json_file
 
-# CompileError()
-# WorkInProgress()
 
 class Director2:
     def __init__(
         self,
         pipeline_spec: PipelineSpec,
-        cases,
-        replacement_config,
-        flat_config_patch,
-        max_concurrancy,
+        cases: List[dict[str, Any]],
+        replacement_config: dict[str, Any]  | None,
+        flat_config_patch: dict[str, Any],
+        max_concurrency: int,
     ):
         self._start = datetime.now().timestamp()
         self._pipeline_spec = pipeline_spec
-        self._concurrancy = max_concurrancy
+        self._concurrency = max_concurrency
 
-        
         registry = Registry()
         register_models(registry)
 
-        self._pipeline = Pipeline2(pipeline_spec, replacement_config, flat_config_patch, registry)
+        self._pipeline = Pipeline2(
+            pipeline_spec, replacement_config, flat_config_patch, registry
+        )
         self._dag = self._pipeline.get_dag()
-
-        # self._config = self._pipeline.config()
 
         self._id = uuid.uuid4()
         self._output_file = os.path.join(
@@ -52,8 +48,11 @@ class Director2:
         self._metadata = {
             "command": " ".join(sys.argv),
             "start": str(datetime.fromtimestamp(self._start, timezone.utc)),
-            "concurrency": self._concurrancy,
-            "pipeline": {"name": pipeline_spec.name, "config": self._pipeline.get_config()},
+            "concurrency": self._concurrency,
+            "pipeline": {
+                "name": pipeline_spec.name,
+                "config": self._pipeline.get_config(),
+            },
         }
         self._results = {
             "results": {},
@@ -76,7 +75,7 @@ class Director2:
             #
             # Perform the run
             #
-            semaphore = asyncio.Semaphore(self._concurrancy)
+            semaphore = asyncio.Semaphore(self._concurrency)
 
             async def sem_task(case):
                 async with semaphore:
@@ -107,25 +106,27 @@ class Director2:
                 progress.stop()
             return self._results
 
+    # DESIGN NOTE: format_results(), summarize_results(), and write_results()
+    # members exist because caller doesn't have the Pipeline instance.
+    def format_results(self, uuid_prefix=None):
+        console = MakeConsole()
+        self._pipeline.format(console, self._results, uuid_prefix)
+        console.render()
+
+    def summarize_results(self):
+        console = MakeConsole()
+        self._pipeline.summarize(console, self._results)
+        console.render()
+
     def write_results(self):
         # Write log
         log_folder = app_configuration["log_folder"]
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
         write_json_file(self._output_file, self._results)
-        # with open(self._output_file, "w", encoding="utf-8") as f:
-        #     json.dump(self._results, f, indent=2, ensure_ascii=False)
 
         print(f"Results written to {self._output_file}")
         return {"log": self._output_file, "results": self._results}
-
-    def summarize_results(self):
-        # TODO: this is an example of code that doesn't use Registry.summaraize().
-        # This is because the pipeline was already created in __init()__
-        console = MakeConsole()
-        self._pipeline.summarize(console, self._results)
-        console.render()
-        # print(f"Results written to {self._output_file}")
 
 
 async def process_one_case(case, dag, completed):

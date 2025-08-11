@@ -2,11 +2,16 @@
 
 * Today
   * # TODO: move these functions out of registry.
+  * # TODO: what about optional uuid_prefix parameter?
+  * pipeline preview() operation
   * x Pipelines should have the ability to locally register models.
   * Extensible format
   * Extensible compare
-  * Rewrite samples
+  * Rewrite samples, update documentation
   * Type annotations everywhere
+    * Use modern tpying
+    * mypy?
+    * search everywhere for `typing`
   * x In pipeline2.py, line 77: "user": turn["user"], # TODO: configurable
   * x Summary
     * x Complete: 6/2 (300.00%) - two cases with three steps each

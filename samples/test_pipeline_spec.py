@@ -187,12 +187,10 @@ def go2():
     progress = None
     completed = None
     asyncio.run(director.process_all_cases(progress, completed))
-    print("done")
     director.write_results()
     director.summarize_results()
-    print("done2")
-    # registry = Registry()
-    # pipeline = Pipeline2(spec, None, {"prepare.template": "samples/turns/template.txt", "infer.model.name": "perfect"}, registry)
+    director.format_results(uuid_prefix=None)
+    print("finished")
 
 
 def go1():
