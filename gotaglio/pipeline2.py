@@ -53,13 +53,14 @@ def create_turns_dag(turn_spec: TurnSpec, turn_dag):
         initial = turn_spec.initial
         expected = turn_spec.expected
         observed = turn_spec.observed
+        user = turn_spec.user
 
         case = context["case"]
 
         # The turn field in the context controls whether the
         # pipeline executes a single turn or all turns.
-        turn = glom(context, "turn", default=None)
-        if turn is None:
+        turn_index = glom(context, "turn", default=None)
+        if turn_index is None:
             # We're running all of the turns
             turns = case["turns"]
             # When running all turns, start with the initial value for the case.
@@ -67,16 +68,20 @@ def create_turns_dag(turn_spec: TurnSpec, turn_dag):
         else:
             # We're running a single turn in isolation
             # Start with the value from the previous turn.
-            turns = [case["turns"][turn]]
-            value = glom(case, f"turns[{turn - 1}].{expected}", default=None)
+            turns = [case["turns"][turn_index]]
+            value = glom(case, f"turns[{turn_index - 1}].{expected}", default=None)
 
         results = []
         for turn in turns:
-            turn_case = {
-                initial: value,
-                "user": turn["user"],
-                expected: turn[expected],
-            }
+            # TODO: want to copy turn and then add the initial value from case[initial]
+            turn_case = turn.copy()
+            turn_case[initial] = value
+            # turn_case = {
+            #     initial: value,
+            #     user: turn[user],
+            #     # TODO: following line can throw an exception if expected is not in turn
+            #     expected: turn[expected],
+            # }
 
             result = await process_one_case(turn_case, turn_dag, None, turn)
 

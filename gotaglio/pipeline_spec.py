@@ -6,6 +6,7 @@ class TurnSpec(BaseModel):
     initial: str = Field(..., min_length=1, description="Initial turn value")
     expected: str = Field(..., min_length=1, description="Expected turn value")
     observed: str = Field(..., min_length=1, description="Observed turn value")
+    user: str = Field(..., min_length=1, description="User text")
 
 
 class ColumnSpec(BaseModel):
@@ -26,6 +27,9 @@ def column_spec(
 
 class SummarizerSpec(BaseModel):
     columns: List[ColumnSpec] = Field([], description="List of columns to summarize")
+    passed: Callable[[Dict[str, Any]], bool] = Field(
+        default=lambda result: False, description="Function to determine if the summarization passed"
+    )
 
 
 class PipelineSpec(BaseModel):

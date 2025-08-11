@@ -1,12 +1,19 @@
 # TODO
 
 * Today
-  * Pass/fail predicate
-  * Exception when `expcted != "answer"` - summary has no rows
+  * x In pipeline2.py, line 77: "user": turn["user"], # TODO: configurable
+  * x Summary
+    * x Complete: 6/2 (300.00%) - two cases with three steps each
+    * x Pass/fail predicate
+    * x keywords column
   * Log logs\43131cfe-1627-4d6f-ae48-5e4ee5527934.json shows `turn` object and `case` object
+  * Rename TurnSpec to TurnMapping?
+    * Can't copy/remap all fields - should instead get fields from case. e.g. need `user` and `base`
   * Extensible format
   * Extensible compare
   * Extensible perfect and flakey models
+  * Exception when `expected != "answer"` - summary has no rows
+  * Rewrite samples
   * Path to models.json and .credentials.json
 * Before
   * Configurable pipeline with turns

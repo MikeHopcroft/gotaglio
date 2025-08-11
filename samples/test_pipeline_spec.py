@@ -1,6 +1,7 @@
 import asyncio
 from glom import glom
 import os
+from rich.text import Text
 import sys
 
 # Add the parent directory to the sys.path so that we can import from the
@@ -15,6 +16,8 @@ from gotaglio.pipeline_spec import PipelineSpec, SummarizerSpec, TurnSpec, Colum
 from gotaglio.pipeline2 import Internal, Pipeline2, Prompt
 from gotaglio.registry import Registry
 from gotaglio.shared import build_template, to_json_string
+from gotaglio.summarize import keywords_column
+
 
 # The structure of the pipeline is defined by the stages() method.
 # This example demonstrates a simple, linear pipeline with four stages.
@@ -79,17 +82,33 @@ def create_dag(name, config, registry):
         return context["stages"]["extract"] - context["case"]["answer"]
 
     # Define the sub-pipeline spec
-    turn_spec = [
+    turn_dag_spec = [
         {"name": "prepare", "function": prepare, "inputs": []},
         {"name": "infer", "function": infer, "inputs": ["prepare"]},
         {"name": "extract", "function": extract, "inputs": ["infer"]},
         {"name": "assess", "function": assess, "inputs": ["extract"]},
     ]
-    return build_dag_from_spec(turn_spec)
+    return build_dag_from_spec(turn_dag_spec)
+
+
+def cost_cell(result, turn_index):
+    cost = glom(result, f"stages.turns.{turn_index}.stages.assess", default=None)
+    cost_text = "" if cost == None else f"{cost:.2f}"
+    return (
+        Text(cost_text, style="bold green")
+        if cost == 0
+        else Text(cost_text, style="bold red")
+    )
 
 
 def user_cell(result, turn_index):
     return result["case"]["turns"][turn_index]["user"]
+
+
+def predicate(result):
+    x = glom(result, "stages.assess", default=1)
+    return x == 0
+
 
 spec = PipelineSpec(
     name="calculator",
@@ -97,8 +116,8 @@ spec = PipelineSpec(
     configuration={
         "prepare": {
             "template": Prompt("Template file for system message"),
-            "template_text": Internal()
-            },
+            "template_text": Internal(),
+        },
         "infer": {
             "model": {
                 "name": Prompt("Model name to use for inference stage"),
@@ -108,34 +127,52 @@ spec = PipelineSpec(
                     "top_p": 0.95,
                     "frequency_penalty": 0,
                     "presence_penalty": 0,
-                }
+                },
             }
-        }
+        },
     },
-    turns=TurnSpec(initial="value", expected="answer", observed="extract"),
+    turns=TurnSpec(initial="value", expected="answer", observed="extract", user="user"),
     create_dag=create_dag,
-    summarize=SummarizerSpec(columns=[ColumnSpec(name="user", contents=user_cell)])
+    summarize=SummarizerSpec(
+        columns=[
+            ColumnSpec(name="cost", contents=cost_cell),
+            keywords_column,
+            ColumnSpec(name="user", contents=user_cell),
+        ],
+        passed=lambda result: glom(result, "stages.assess", default=1) == 0,
+    ),
 )
 
 cases = [
-  {
-    "uuid": "ed6ceb29-b4b9-427c-99b8-635984198a59",
-    "keywords": ["mutli-turn"],
-    "value": 0,
-    "turns": [
-      { "user": "1+1", "base": 10, "answer": 2 },
-      { "user": "add one hundred", "base": 10, "answer": 102 },
-      { "user": "divide by two", "base": 10, "answer": 51 }
-    ]
-  }
+    {
+        "uuid": "ed6ceb29-b4b9-427c-99b8-635984198a59",
+        "keywords": ["multi-turn"],
+        "value": 0,
+        "turns": [
+            {"user": "1+1", "base": 10, "answer": 2},
+            {"user": "add one hundred", "base": 10, "answer": 102},
+            {"user": "divide by two", "base": 10, "answer": 51},
+        ],
+    },
+    {
+        "uuid": "abcceb29-b4b9-427c-99b8-635984198a59",
+        "keywords": ["multi-turn"],
+        "value": 0,
+        "turns": [
+            {"user": "1+1", "base": 10, "answer": 2},
+            {"user": "add one hundred", "base": 10, "answer": 102},
+            {"user": "divide by two", "base": 10, "answer": 51},
+        ],
+    },
 ]
 
 flat_config_patch = {
     "prepare.template": "samples/turns/template.txt",
-    "infer.model.name": "gpt4o"
+    "infer.model.name": "gpt4o",
 }
 
 max_concurrency = 1
+
 
 def go2():
     director = Director2(spec, cases, {}, flat_config_patch, max_concurrency)
@@ -148,6 +185,7 @@ def go2():
     print("done2")
     # registry = Registry()
     # pipeline = Pipeline2(spec, None, {"prepare.template": "samples/turns/template.txt", "infer.model.name": "perfect"}, registry)
+
 
 def go1():
     print(spec)
@@ -168,21 +206,22 @@ def go1():
                     "turns": [
                         {"user": "1+1", "expected": 2},
                         {"user": "Plus 100", "expected": 102},
-                        {"user": "divide by two", "expected": 51}
-                    ]
+                        {"user": "divide by two", "expected": 51},
+                    ],
                 },
                 "stages": {
                     "turns": [
                         {"succeeded": True, "stages": {"extract": 2}},
                         {"succeeded": True, "stages": {"extract": 103}},
-                        {"succeeded": True, "stages": {"extract": 51}}
+                        {"succeeded": True, "stages": {"extract": 51}},
                     ]
-                }
+                },
             },
         ],
     }
     console = MakeConsole()
     pipeline.summarize(console, runlog)
     console.render()
+
 
 go2()

@@ -55,17 +55,15 @@ class Summarizer:
                     else Text("ERROR", style="bold red")
                 )
 
-            def keywords_cell(result, turn_index):
-                return (
-                    ", ".join(sorted(result["case"]["keywords"]))
-                    if "keywords" in result["case"]
-                    else ""
-                )
-
             columns = [
-                column_spec(name="id", contents=id_cell, justify="right", style="cyan", no_wrap=True),
+                column_spec(
+                    name="id",
+                    contents=id_cell,
+                    justify="right",
+                    style="cyan",
+                    no_wrap=True,
+                ),
                 column_spec(name="status", contents=status_cell, style="magenta"),
-                column_spec(name="keywords", contents=keywords_cell),
             ]
             for column in self._summarizer_spec.columns:
                 columns.append(column)
@@ -83,7 +81,7 @@ class Summarizer:
             #   table.add_column("user", justify="left", style="green")
 
             # Set up some counters for totals to be presented after the table.
-            total_count = len(results)
+            self.total_count = 0
             self.complete_count = 0
             self.passed_count = 0
             self.failed_count = 0
@@ -97,25 +95,23 @@ class Summarizer:
                     else result
                 )
                 for index, turn_result in enumerate(turn_results):
-                    self.render_one_row(
-                        table, columns, result, index, turn_result
-                    )
+                    self.render_one_row(table, columns, result, index, turn_result)
 
             # Display the table and the totals.
             console.print(table)
             console.print()
-            console.print(f"Total: {total_count}")
+            console.print(f"Total: {self.total_count}")
             console.print(
-                f"Complete: {self.complete_count}/{total_count} ({(self.complete_count/total_count)*100:.2f}%)"
+                f"Complete: {self.complete_count}/{self.total_count} ({(self.complete_count/self.total_count)*100:.2f}%)"
             )
             console.print(
-                f"Error: {self.error_count}/{total_count} ({(self.error_count/total_count)*100:.2f}%)"
+                f"Error: {self.error_count}/{self.total_count} ({(self.error_count/self.total_count)*100:.2f}%)"
             )
             console.print(
-                f"Passed: {self.passed_count}/{total_count} ({(self.passed_count/total_count)*100:.2f}%)"
+                f"Passed: {self.passed_count}/{self.total_count} ({(self.passed_count/self.total_count)*100:.2f}%)"
             )
             console.print(
-                f"Failed: {self.failed_count}/{total_count} ({(self.failed_count/total_count)*100:.2f}%)"
+                f"Failed: {self.failed_count}/{self.total_count} ({(self.failed_count/self.total_count)*100:.2f}%)"
             )
             console.print()
 
@@ -125,11 +121,13 @@ class Summarizer:
         #   cost = (
         #       turn_result["stages"]["assess"] if succeeded else None # TODO: configurable
         #   )
-        cost = turn_index % 2  # Dummy cost for demonstration purposes
+        # cost = turn_index % 2  # Dummy cost for demonstration purposes
+        passed = self._summarizer_spec.passed(turn_result)
 
+        self.total_count += 1
         if succeeded:
             self.complete_count += 1
-            if cost == 0:
+            if passed:
                 self.passed_count += 1
             else:
                 self.failed_count += 1
@@ -146,3 +144,13 @@ class Summarizer:
         # user = turn_result["case"]["turns"][index]["user"]   # TODO: configurable
         row = [col.contents(result, turn_index) for col in columns]
         table.add_row(*row)
+
+
+def keywords_cell(result, turn_index):
+    return (
+        ", ".join(sorted(result["case"]["keywords"]))
+        if "keywords" in result["case"]
+        else ""
+    )
+
+keywords_column = column_spec(name="keywords", contents=keywords_cell)
