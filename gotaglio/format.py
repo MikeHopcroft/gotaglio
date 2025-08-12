@@ -1,24 +1,9 @@
 from typing import Callable
 
 from .helpers import IdShortener
-from .lazy_imports import tiktoken
 from .pipeline_spec import FormatterSpec, TurnMappingSpec
 from .shared import to_json_string
-
-
-class Tokenizer:
-    def __init__(self):
-        self._tokenizer = None
-
-    def encode(self, text: str) -> list[int]:
-        # Lazily load the tokenizer here so that we don't slow down
-        # other scenarios that don't need it.
-        if self._tokenizer is None:
-            self._tokenizer = tiktoken.get_encoding("cl100k_base")
-        return self._tokenizer.encode(text)
-
-
-tokenizer = Tokenizer()
+from .tokenizer import tokenizer
 
 
 # If uuid_prefix is specified, format those cases whose uuids start with
@@ -71,7 +56,9 @@ def format(
                 else:
                     console.print()
                 if turn_result["succeeded"]:
-                    cost = turn_result["stages"]["assess"]  # TODO: configurable - use passed predicate
+                    cost = turn_result["stages"][
+                        "assess"
+                    ]  # TODO: configurable - use passed predicate
                     if cost == 0:
                         console.print(f"### Turn {index + 1}: **PASSED**  ")
                     else:

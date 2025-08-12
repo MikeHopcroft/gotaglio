@@ -3,7 +3,13 @@
 * Today
   * # TODO: move these functions out of registry.
   * # TODO: what about optional uuid_prefix parameter?
-  * extract tokenizer to own file
+  * breaking change notes
+  * directory walk to find configs
+  * .gotaglio.credentials.json/yaml
+  * .gotaglio.models.json/yaml
+  * read_data_file
+  * write_data_file
+  * x extract tokenizer to own file
   * passed predicate moves to PipelineSpec
   * pipeline.diff_configs()
   * pipeline preview() operation
