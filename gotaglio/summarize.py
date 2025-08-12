@@ -8,21 +8,24 @@ from .pipeline_spec import column_spec, SummarizerSpec, TurnMappingSpec
 
 
 def summarize(
+    passed_predicate: Callable[[dict[str, Any]], bool],
     summarizer_spec: SummarizerSpec,
     turn_spec: TurnMappingSpec | None,
     make_console: Callable,
     runlog: dict[str, Any],
 ):
-    s = Summarizer(summarizer_spec, turn_spec)
+    s = Summarizer(passed_predicate, summarizer_spec, turn_spec)
     s.summarize(make_console, runlog)
 
 
 class Summarizer:
     def __init__(
         self,
+        passed_predicate: Callable[[dict[str, Any]], bool],
         summarizer_spec: SummarizerSpec,
         turn_spec: TurnMappingSpec | None = None,
     ):
+        self._passed_predicate = passed_predicate
         self._summarizer_spec = summarizer_spec
         self._turn_spec = turn_spec
 
@@ -124,7 +127,7 @@ class Summarizer:
         #       turn_result["stages"]["assess"] if succeeded else None # TODO: configurable
         #   )
         # cost = turn_index % 2  # Dummy cost for demonstration purposes
-        passed = self._summarizer_spec.passed(turn_result)
+        passed = self._passed_predicate(turn_result)
 
         self.total_count += 1
         if succeeded:

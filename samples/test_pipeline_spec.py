@@ -138,9 +138,6 @@ spec = PipelineSpec(
             }
         },
     },
-    turns=TurnMappingSpec(
-        initial="value", expected="answer", observed="extract", user="user"
-    ),
     create_dag=create_dag,
     format=FormatterSpec(
         before_case=lambda case: Text(f"Formatting case: {case['case']['uuid']}"),
@@ -148,13 +145,16 @@ spec = PipelineSpec(
         before_turn=lambda case: Text(f"Formatting turn: {case['case']['user']}"),
         after_turn=lambda case: Text(f"Finished formatting turn: {case['case']['user']}"),
     ),
+    passed_predicate=lambda result: glom(result, "stages.assess", default=1) == 0,
     summarize=SummarizerSpec(
         columns=[
             ColumnSpec(name="cost", contents=cost_cell),
             keywords_column,
             ColumnSpec(name="user", contents=user_cell),
-        ],
-        passed=lambda result: glom(result, "stages.assess", default=1) == 0,
+        ]
+    ),
+    turns=TurnMappingSpec(
+        initial="value", expected="answer", observed="extract", user="user"
     ),
 )
 

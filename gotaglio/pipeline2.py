@@ -20,6 +20,7 @@ class Pipeline2:
         flat_config_patch: dict[str, Any],
         global_registry: Registry,
     ):
+        self._passed_predicate = spec.passed_predicate
         self._turn_spec = spec.turns
         self._summarizer = spec.summarize
         self._formatter = spec.format
@@ -68,7 +69,9 @@ class Pipeline2:
         if callable(self._summarizer):
             return self._summarizer(make_console, runlog)
         else:
-            summarize(self._summarizer, self._turn_spec, make_console, runlog)
+            summarize(
+                self._passed_predicate, self._summarizer, self._turn_spec, make_console, runlog
+            )
 
 
 def create_turns_dag(turn_spec: TurnMappingSpec, turn_dag):

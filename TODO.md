@@ -12,7 +12,7 @@
   * x read_data_file
   * x write_data_file
   * x extract tokenizer to own file
-  * passed predicate moves to PipelineSpec
+  * x passed predicate moves to PipelineSpec
   * pipeline.diff_configs()
   * pipeline preview() operation
   * x Pipelines should have the ability to locally register models.
