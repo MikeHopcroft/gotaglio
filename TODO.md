@@ -1,11 +1,20 @@
 # TODO
 
 * Today
+  * Code duplication: traceback.format_exc()?
   * x Abstract looking up pipeline spec
   * Translate rerun
   * . Translate summarize
   * Continue cleaning up TODOs in Pipeline2.format
   * Naming format, formatter, etc.
+    * Director2.format_results()
+    * Pipeline2.format()
+    * format.py: * format()
+    * FormatterSpec
+    * Gotaglio.format()
+    * PipelineSpec.format
+    * formatter_spec parameter and local variable
+    * Registry.format()
   * Dealing with turns in format, summarize, compare
     * Summarizer.summarize status cell
   * Registry becomes Models or ModelRegistry
