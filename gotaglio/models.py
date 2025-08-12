@@ -3,8 +3,8 @@ import os
 
 from .constants import app_configuration
 from .exceptions import ExceptionContext
-from .shared import read_json_file
-from . import lazy_imports
+from .lazy_imports import azure_ai_inference, azure_core_credentials, openai
+from .shared import read_data_file
 
 
 class Model(ABC):
@@ -31,8 +31,9 @@ class AzureAI(Model):
         if not self._client:
             endpoint = self._config["endpoint"]
             key = self._config["key"]
-            self._client = lazy_imports.azure_ai_inference.ChatCompletionsClient(
-                endpoint=endpoint, credential=lazy_imports.azure_core_credentials.AzureKeyCredential(key)
+            self._client = azure_ai_inference.ChatCompletionsClient(
+                endpoint=endpoint,
+                credential=azure_core_credentials.AzureKeyCredential(key),
             )
 
         response = self._client.complete(messages=messages)
@@ -54,7 +55,7 @@ class AzureOpenAI(Model):
             endpoint = self._config["endpoint"]
             key = self._config["key"]
             api = self._config["api"]
-            self._client = lazy_imports.openai.AzureOpenAI(
+            self._client = openai.AzureOpenAI(
                 api_key=key,
                 api_version=api,
                 azure_endpoint=endpoint,
@@ -78,25 +79,33 @@ class AzureOpenAI(Model):
         return {k: v for k, v in self._config.items() if k != "key"}
 
 
-def register_models(
-    registry,
-    config_file=None,
-    credentials_file=None,
-):
-    config_file = config_file or app_configuration["model_config_file"]
-    credentials_file = credentials_file or app_configuration["model_credentials_file"]
+def register_models(registry):
+    config_files = app_configuration["model_config_files"]
+    credentials_files = app_configuration["model_credentials_files"]
 
-    if not os.path.exists(config_file):
-        pass
-    else:
-        config = read_json_file(config_file, False)
+    # Read the model configuration file
+    config = None
+    for config_file in config_files:
+        config = read_data_file(config_file, True, True)
+        if config:
+            break
 
+    # Read the credentials file
+    credentials = None
+    for credentials_file in credentials_files:
+        credentials = read_data_file(credentials_file, True, True)
+        if credentials:
+            break
+
+    if config and credentials:
         # Merge in keys from credentials file
-        credentials = read_json_file(credentials_file, True)
         for model in config:
             if model["name"] in credentials:
                 model["key"] = credentials[model["name"]]
 
+    if config:
+        # Construct and register models.
+        # TODO: lazy construction of models on first use
         for model in config:
             with ExceptionContext(f"While registering model '{model['name']}':"):
                 if model["type"] == "AZURE_AI":

@@ -3,8 +3,8 @@ from pathlib import Path
 app_configuration_values = {
     "base_folder": "",
     "log_folder": "logs",
-    "model_config_file": "models.json",
-    "model_credentials_file": ".credentials.json",
+    "model_config_files": ["models.json", "models.yaml", "models.yml"],
+    "model_credentials_files": [".credentials.json", ".credentials.yaml", ".credentials.yml"],
     "default_concurrancy": 2,
     "program_name": "gotag",
 }
@@ -12,7 +12,7 @@ app_configuration_values = {
 class AppConfiguration:
     def __init__(self, config):
         self._config = config
-        self.base_relative = ["log_folder", "model_config_file", "model_credentials_file"]
+        self.base_relative = ["log_folder"]
 
     def __getitem__(self, key):
         if key in self.base_relative:
