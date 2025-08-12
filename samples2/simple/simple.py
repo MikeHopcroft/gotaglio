@@ -152,8 +152,12 @@ def predicate(result):
 
 
 simple_pipeline_spec = PipelineSpec(
+    # Pipeline name used in `gotag run <pipeline>.`
     name="calculator",
+    #
+    # Pipeline description shown by `gotag pipelines.`
     description="A simple calculator pipeline",
+    #
     # Default configuration values for each pipeline stage.
     # The structure and interpretation of each configuration dict is
     # dictated by the needs of corresponding pipeline stages.
@@ -219,6 +223,7 @@ simple_pipeline_spec = PipelineSpec(
     #     initial="value", expected="answer", observed="extract", user="user"
     # ),
 )
+
 
 def go():
     main([simple_pipeline_spec])

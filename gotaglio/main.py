@@ -6,13 +6,13 @@ from .pipeline_spec import PipelineSpec, PipelineSpecs
 from .registry import Registry
 from .subcommands.add_ids import add_ids
 from .subcommands.compare import compare
-from .subcommands.format import format2
+from .subcommands.format import format_command
 from .subcommands.help import show_help
 from .subcommands.history import show_history
 from .subcommands.list_models import list_models
 from .subcommands.list_pipelines import list_pipelines
 from .subcommands.run import rerun_pipeline, run_pipeline2
-from .subcommands.summarize import summarize2
+from .subcommands.summarize import summarize_command
 
 
 def main(pipelines: list[PipelineSpec]):
@@ -157,10 +157,10 @@ def main(pipelines: list[PipelineSpec]):
             run_pipeline2(pipeline_specs, args)
 
         elif args.command == "format":
-            format2(pipeline_specs, args)
+            format_command(pipeline_specs, args)
 
         elif args.command == "summarize":
-            summarize2(pipeline_specs, args)
+            summarize_command(pipeline_specs, args)
 
         else:
             parser.print_help()

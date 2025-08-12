@@ -60,17 +60,20 @@ class Pipeline2:
 
     def format(self, make_console, runlog, uuid_prefix=None):
         if callable(self._formatter):
-            return self._formatter(make_console, runlog)
+            self._formatter(make_console, runlog)
         else:
-            # TODO: what about optional uuid_prefix parameter?
             format(self._formatter, self._turn_spec, make_console, runlog, uuid_prefix)
 
     def summarize(self, make_console, runlog):
         if callable(self._summarizer):
-            return self._summarizer(make_console, runlog)
+            self._summarizer(make_console, runlog)
         else:
             summarize(
-                self._passed_predicate, self._summarizer, self._turn_spec, make_console, runlog
+                self._passed_predicate,
+                self._summarizer,
+                self._turn_spec,
+                make_console,
+                runlog,
             )
 
 

@@ -6,6 +6,8 @@
   * Translate rerun
   * . Translate summarize
   * Continue cleaning up TODOs in Pipeline2.format
+  * format.py's format() should take spec
+  * summarize.py's summarize should take spec
   * Naming format, formatter, etc.
     * Director2.format_results()
     * Pipeline2.format()
