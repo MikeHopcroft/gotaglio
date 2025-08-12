@@ -38,7 +38,7 @@ def format(
         for result in results:
             if uuid_prefix and not result["case"]["uuid"].startswith(uuid_prefix):
                 continue
-            turn_count = f" ({len(result['stages']['turns'])} turn{'s' if len(result['stages']['turns']) != 1 else ''})"
+            turn_count = f" ({len(result['stages']['turns'])} turn{'s' if len(result['stages']['turns']) != 1 else ''})" if turn_spec is not None else ""
             console.print(f"## Case: {short_id(result['case']['uuid'])}{turn_count}")
 
             if formatter_spec.before_case:
@@ -50,7 +50,8 @@ def format(
             )
             console.print()
 
-            for index, turn_result in enumerate(result["stages"]["turns"]):
+            turns = result["stages"]["turns"] if turn_spec is not None else [result]
+            for index, turn_result in enumerate(turns):
                 if index > 0:
                     console.print("---")
                 else:

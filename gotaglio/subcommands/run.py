@@ -3,11 +3,42 @@ from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 
 from ..constants import app_configuration
 from ..director import Director
+from ..director2 import Director2
+from ..pipeline_spec import PipelineSpec
 from ..shared import (
     log_file_name_from_prefix,
     parse_key_value_args,
+    read_data_file,
     read_json_file,
 )
+
+def run_pipeline2(pipeline_spec: list[PipelineSpec], args):
+    cases_file = args.cases
+    pipeline_name = args.pipeline
+    flat_config_patch = parse_key_value_args(args.key_values)
+    concurrency = args.concurrency or app_configuration["default_concurrancy"]
+
+    spec = next((s for s in pipeline_spec if s.name == pipeline_name), None)
+    if spec is None:
+        raise ValueError(f"Cannot fine pipeline '{pipeline_name}'.")
+
+    cases = read_data_file(cases_file, False, False)
+
+    director = Director2(spec, cases, None, flat_config_patch, concurrency)
+    print(f"Run configuration")
+    print(f"  id: {director._id}")
+    print(f"  cases: {cases_file}")
+    print(f"  pipeline: {pipeline_name}")
+    # diff = director._pipeline.diff_configs()
+    # lines = [f"    {k}: {v1} => {v2}" for k, v1, v2 in diff]
+    # print("\n".join(lines))
+    print(f"  concurrancy: {concurrency}")
+    print("")
+
+    run_with_progress_bar(director)
+
+    director.write_results()
+    director.summarize_results()
 
 
 def run_pipeline(registry_factory, args):

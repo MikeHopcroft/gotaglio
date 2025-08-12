@@ -11,6 +11,20 @@ def dag_spec_from_linear(stages):
         spec[i]["inputs"] = [spec[i-1]["name"]]
     return spec
 
+def build_dag_from_linear(stages):
+    """
+    Build a DAG from a linear sequence of stages. Each stage is a coroutine
+    function that takes a context dictionary as an argument.
+    
+    Args:
+        stages (dict): A dictionary where keys are stage names and values are
+                       coroutine functions.
+    
+    Returns:
+        dict: A DAG specification.
+    """
+    spec = dag_spec_from_linear(stages)
+    return build_dag_from_spec(spec)
 
 def build_dag_from_spec(spec):
     # Create basic DAG with input links.

@@ -1,0 +1,21 @@
+# Note that each test case must have a unique UUID.
+# UUIDs can be added with the `add-ids` subcommand or the
+# ` method.
+- uuid: 6f31c4df-bba6-42cd-a3ae-24f31d5503fa
+  keywords:
+    - numbers
+  user: "1+1"
+  base: 10
+  answer: 2
+- uuid: ceb61568-73c9-4b5e-812f-0fa2df1464f1
+  keywords:
+    - text
+  user: "one hundred two divided by two"
+  base: 10
+  answer: 51
+- uuid: 178f2c37-557f-4d89-b48d-4f07e828e6ff
+  keywords:
+    - hexidecimal
+  user: "ff + a"
+  base: 16
+  answer: 265

@@ -63,7 +63,7 @@ class PipelineSpec(BaseModel):
         description="Function to determine if the summarization passed",
     )
     summarize: SummarizerSpec | Callable = Field(
-        ..., description="Optional summarizer spec or function"
+        default=None, description="Optional summarizer spec or function"
     )
-    turns: TurnMappingSpec = Field(None, description="Optional turns configuration")
+    turns: TurnMappingSpec = Field(default=None, description="Optional turns configuration")
     # TODO: Compare

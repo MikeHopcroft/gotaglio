@@ -5,13 +5,13 @@ from .exceptions import ExceptionContext
 from .registry import Registry
 from .subcommands.add_ids import add_ids
 from .subcommands.compare import compare
-from .subcommands.format import format
+from .subcommands.format import format2
 from .subcommands.help import show_help
 from .subcommands.history import show_history
 from .subcommands.list_models import list_models
 from .subcommands.list_pipelines import list_pipelines
-from .subcommands.run import rerun_pipeline, run_pipeline
-from .subcommands.summarize import summarize
+from .subcommands.run import rerun_pipeline, run_pipeline2
+from .subcommands.summarize import summarize2
 
 
 def main(pipelines):
@@ -148,14 +148,16 @@ def main(pipelines):
         elif args.command == "rerun":
             rerun_pipeline(create_registry, args)
 
+        # elif args.command == "run":
+        #     run_pipeline(create_registry, args)
         elif args.command == "run":
-            run_pipeline(create_registry, args)
+            run_pipeline2(pipelines, args)
 
         elif args.command == "format":
-            format(create_registry, args)
+            format2(pipelines, args)
 
         elif args.command == "summarize":
-            summarize(create_registry, args)
+            summarize2(pipelines, args)
 
         else:
             parser.print_help()

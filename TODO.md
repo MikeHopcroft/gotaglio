@@ -1,9 +1,21 @@
 # TODO
 
 * Today
+  * Abstract looking up pipeline spec
+  * Translate rerun
+  * . Translate summarize
+  * Continue cleaning up TODOs in Pipeline2.format
+  * Naming format, formatter, etc.
+  * Dealing with turns in format, summarize, compare
+    * Summarizer.summarize status cell
+  * Registry becomes Models or ModelRegistry
+  * pipelines becomes Pipelines or PipelineRegistry
+  * Test default formatter, summarizer, pass_predicate, turn_mapper
+  * Consistant turn_mapper name
   * # TODO: move these functions out of registry.
   * # TODO: what about optional uuid_prefix parameter?
   * # TODO: lazy construction of models on first use
+  * 'Pipeline2' object has no attribute 'diff_configs'
   * x breaking change notes
   * x directory walk to find configs
   * x configs can be json or yaml

@@ -50,7 +50,7 @@ class Summarizer:
 
             def status_cell(result, turn_index):
                 succeeded = (
-                    result["stages"]["succeeded"]
+                    result["succeeded"]
                     if self._turn_spec is None
                     else result["stages"]["turns"][turn_index]["succeeded"]
                 )
@@ -99,8 +99,12 @@ class Summarizer:
                     if self._turn_spec is not None
                     else result
                 )
-                for index, turn_result in enumerate(turn_results):
-                    self.render_one_row(table, columns, result, index, turn_result)
+                if self._turn_spec:
+                    for index, turn_result in enumerate(turn_results):
+                        self.render_one_row(table, columns, result, index, turn_result)
+                else:
+                    # If there are no turns, we just render the result as a single row.
+                    self.render_one_row(table, columns, result, 0, turn_results)
 
             # Display the table and the totals.
             console.print(table)

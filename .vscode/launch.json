@@ -14,18 +14,40 @@
       ]
     },
     {
+      "name": "format",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "samples2/simple/simple.py",
+      "console": "integratedTerminal",
+      "args": [
+        "format",
+        "c2b",
+      ]
+    },
+    {
+      "name": "summarize",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "samples2/simple/simple.py",
+      "console": "integratedTerminal",
+      "args": [
+        "summarize",
+        "c2b",
+      ]
+    },
+    {
       "name": "simple",
       "type": "debugpy",
       "request": "launch",
-      "program": "samples/simple/simple.py",
+      "program": "samples2/simple/simple.py",
       "console": "integratedTerminal",
       "args": [
         "run",
-        "samples\\simple\\cases.json",
-        "simple",
+        "calculator",
+        "samples2/simple/data/cases.yaml",
         "--concurrency",
         "1",
-        "prepare.template=samples\\simple\\template.txt",
+        "prepare.templateX=samples2/simple/data/template.txt",
         "infer.model.name=perfect"
       ]
     },
