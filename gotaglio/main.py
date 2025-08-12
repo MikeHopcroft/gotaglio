@@ -4,15 +4,15 @@ from .constants import app_configuration
 from .exceptions import ExceptionContext
 from .pipeline_spec import PipelineSpec, PipelineSpecs
 from .registry import Registry
-from .subcommands.add_ids import add_ids
-from .subcommands.compare import compare
-from .subcommands.format import format_command
-from .subcommands.help import show_help
-from .subcommands.history import show_history
-from .subcommands.list_models import list_models
-from .subcommands.list_pipelines import list_pipelines
-from .subcommands.run import rerun_pipeline, run_pipeline2
-from .subcommands.summarize import summarize_command
+from .subcommands.add_ids_cmd import add_ids
+from .subcommands.compare_cmd import compare
+from .subcommands.format_cmd import format_command
+from .subcommands.help_cmd import show_help
+from .subcommands.history_cmd import show_history
+from .subcommands.list_models_cmd import list_models
+from .subcommands.list_pipelines_cmd import list_pipelines
+from .subcommands.run_cmd import rerun_pipeline, run_pipeline2
+from .subcommands.summarize_cmd import summarize_command
 
 
 def main(pipelines: list[PipelineSpec]):
