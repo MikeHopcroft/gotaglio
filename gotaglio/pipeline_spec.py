@@ -67,3 +67,19 @@ class PipelineSpec(BaseModel):
     )
     turns: TurnMappingSpec = Field(default=None, description="Optional turns configuration")
     # TODO: Compare
+
+class PipelineSpecs:
+    """
+    Registry for PipelineSpec objects.
+    """
+    def __init__(self, pipelines: list[PipelineSpec]):
+        self.pipelines = pipelines
+
+    def get(self, name: str) -> PipelineSpec | None:
+        """
+        Retrieve a PipelineSpec by name.
+        """
+        spec = next((p for p in self.pipelines if p.name == name), None)
+        if spec is None:
+            raise ValueError(f"Cannot find pipeline '{name}'.")
+        return spec

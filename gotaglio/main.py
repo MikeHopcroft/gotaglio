@@ -2,6 +2,7 @@ import argparse
 
 from .constants import app_configuration
 from .exceptions import ExceptionContext
+from .pipeline_spec import PipelineSpec, PipelineSpecs
 from .registry import Registry
 from .subcommands.add_ids import add_ids
 from .subcommands.compare import compare
@@ -14,7 +15,9 @@ from .subcommands.run import rerun_pipeline, run_pipeline2
 from .subcommands.summarize import summarize2
 
 
-def main(pipelines):
+def main(pipelines: list[PipelineSpec]):
+    pipeline_specs = PipelineSpecs(pipelines)
+ 
     # Use create_registry() to delay Registry configuration until we
     # actually need to instantiate a Registry. This avoids Registry
     # instantiation exceptions before argument parsing exceptions.
@@ -151,13 +154,13 @@ def main(pipelines):
         # elif args.command == "run":
         #     run_pipeline(create_registry, args)
         elif args.command == "run":
-            run_pipeline2(pipelines, args)
+            run_pipeline2(pipeline_specs, args)
 
         elif args.command == "format":
-            format2(pipelines, args)
+            format2(pipeline_specs, args)
 
         elif args.command == "summarize":
-            summarize2(pipelines, args)
+            summarize2(pipeline_specs, args)
 
         else:
             parser.print_help()

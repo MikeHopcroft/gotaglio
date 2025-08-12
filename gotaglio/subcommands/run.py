@@ -4,7 +4,7 @@ from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from ..constants import app_configuration
 from ..director import Director
 from ..director2 import Director2
-from ..pipeline_spec import PipelineSpec
+from ..pipeline_spec import PipelineSpecs
 from ..shared import (
     log_file_name_from_prefix,
     parse_key_value_args,
@@ -12,15 +12,13 @@ from ..shared import (
     read_json_file,
 )
 
-def run_pipeline2(pipeline_spec: list[PipelineSpec], args):
+def run_pipeline2(pipeline_specs: PipelineSpecs, args):
     cases_file = args.cases
     pipeline_name = args.pipeline
     flat_config_patch = parse_key_value_args(args.key_values)
     concurrency = args.concurrency or app_configuration["default_concurrancy"]
 
-    spec = next((s for s in pipeline_spec if s.name == pipeline_name), None)
-    if spec is None:
-        raise ValueError(f"Cannot fine pipeline '{pipeline_name}'.")
+    spec = pipeline_specs.get(pipeline_name)
 
     cases = read_data_file(cases_file, False, False)
 

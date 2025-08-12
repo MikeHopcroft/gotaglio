@@ -1,7 +1,7 @@
 # TODO
 
 * Today
-  * Abstract looking up pipeline spec
+  * x Abstract looking up pipeline spec
   * Translate rerun
   * . Translate summarize
   * Continue cleaning up TODOs in Pipeline2.format
@@ -9,9 +9,12 @@
   * Dealing with turns in format, summarize, compare
     * Summarizer.summarize status cell
   * Registry becomes Models or ModelRegistry
+  * Remove registry functions for format, summarize, compare, etc.
   * pipelines becomes Pipelines or PipelineRegistry
   * Test default formatter, summarizer, pass_predicate, turn_mapper
   * Consistant turn_mapper name
+  * pipeline.diff_configs()
+  * pipeline preview() operation
   * # TODO: move these functions out of registry.
   * # TODO: what about optional uuid_prefix parameter?
   * # TODO: lazy construction of models on first use
@@ -25,8 +28,6 @@
   * x write_data_file
   * x extract tokenizer to own file
   * x passed predicate moves to PipelineSpec
-  * pipeline.diff_configs()
-  * pipeline preview() operation
   * x Pipelines should have the ability to locally register models.
   * . Extensible format
     * Port cli samples - simple, calculator, menu
