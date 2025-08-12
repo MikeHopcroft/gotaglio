@@ -47,7 +47,7 @@
         "samples2/simple/data/cases.yaml",
         "--concurrency",
         "1",
-        "prepare.templateX=samples2/simple/data/template.txt",
+        "prepare.template=samples2/simple/data/template.txt",
         "infer.model.name=perfect"
       ]
     },

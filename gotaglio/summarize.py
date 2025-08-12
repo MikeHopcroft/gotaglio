@@ -4,35 +4,33 @@ from rich.text import Text
 from typing import Any, Callable
 
 from .helpers import IdShortener
-from .pipeline_spec import column_spec, SummarizerSpec, TurnMappingSpec
+from .pipeline_spec import PipelineSpec, column_spec, SummarizerSpec, TurnMappingSpec
 
 
 def summarize(
-    passed_predicate: Callable[[dict[str, Any]], bool],
-    summarizer_spec: SummarizerSpec,
-    turn_spec: TurnMappingSpec | None,
+    spec: PipelineSpec,
     make_console: Callable,
     runlog: dict[str, Any],
 ):
-    s = Summarizer(passed_predicate, summarizer_spec, turn_spec)
-    s.summarize(make_console, runlog)
+    console = make_console("text/plain")
+    if callable(spec.summarizer):
+        spec.summarizer(console, runlog)
+    else:
+        s = Summarizer(spec)
+        s.summarize(console, runlog)
 
 
 class Summarizer:
     def __init__(
-        self,
-        passed_predicate: Callable[[dict[str, Any]], bool],
-        summarizer_spec: SummarizerSpec,
-        turn_spec: TurnMappingSpec | None = None,
+        self, spec: PipelineSpec
     ):
-        self._passed_predicate = passed_predicate
-        self._summarizer_spec = summarizer_spec
-        self._turn_spec = turn_spec
+        self._passed_predicate = spec.passed_predicate
+        self._summarizer_spec = spec.summarizer
+        self._turn_spec = spec.turns
 
     # This method is used to summarize the results of each a pipeline run.
     # It is invoked by the `run`, `rerun`, and `summarize` sub-commands.
-    def summarize(self, make_console, runlog):
-        console = make_console("text/plain")
+    def summarize(self, console, runlog):
         results = runlog["results"]
         if len(results) == 0:
             console.print("No results.")

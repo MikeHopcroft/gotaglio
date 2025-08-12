@@ -1,7 +1,9 @@
 # TODO
 
 * Today
+  * Translate gotag.py
   * Code duplication: traceback.format_exc()?
+  * Rename run.py to run_command.py and etc.
   * x Abstract looking up pipeline spec
   * Translate rerun
   * . Translate summarize
@@ -9,10 +11,11 @@
   * format.py's format() should take spec
   * summarize.py's summarize should take spec
   * Naming format, formatter, etc.
-    * Director2.format_results()
-    * Pipeline2.format()
-    * format.py: * format()
-    * FormatterSpec
+  * Do we need both Director.summarize() and summarize()?
+    * x Director2.format_results()
+    * x Pipeline2.format()
+    * x format.py: * format()
+    * x FormatterSpec
     * Gotaglio.format()
     * PipelineSpec.format
     * formatter_spec parameter and local variable

@@ -9,6 +9,7 @@ import uuid
 from .constants import app_configuration
 from .dag import run_dag
 from .exceptions import ExceptionContext
+from .format import format
 from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener
 from .make_console import MakeConsole
@@ -17,6 +18,7 @@ from .pipeline2 import Pipeline2
 from .pipeline_spec import PipelineSpec
 from .registry import Registry
 from .shared import write_json_file
+from .summarize import summarize
 
 
 class Director2:
@@ -29,7 +31,7 @@ class Director2:
         max_concurrency: int,
     ):
         self._start = datetime.now().timestamp()
-        self._pipeline_spec = pipeline_spec
+        self._spec = pipeline_spec
         self._concurrency = max_concurrency
 
         registry = Registry()
@@ -108,18 +110,18 @@ class Director2:
 
     # DESIGN NOTE: format_results(), summarize_results(), and write_results()
     # members exist because caller doesn't have the Pipeline instance.
-    def format_results(self, uuid_prefix=None):
+    def format(self, uuid_prefix=None):
         console = MakeConsole()
-        self._pipeline.format(console, self._results, uuid_prefix)
+        format(self._spec, console, self._results, uuid_prefix)
         console.render()
 
-    def summarize_results(self):
+    def summarize(self):
         console = MakeConsole()
-        self._pipeline.summarize(console, self._results)
+        summarize(self._spec, console, self._results)
         console.render()
 
-    def write_results(self):
-        # Write log
+    def write(self):
+        # Write results to log file
         log_folder = app_configuration["log_folder"]
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)

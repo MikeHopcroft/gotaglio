@@ -194,9 +194,9 @@ def go2():
     progress = None
     completed = None
     asyncio.run(director.process_all_cases(progress, completed))
-    director.write_results()
-    director.summarize_results()
-    director.format_results(uuid_prefix=None)
+    director.write()
+    director.summarize()
+    director.format(uuid_prefix=None)
     print("finished")
 
 

@@ -55,14 +55,14 @@ class PipelineSpec(BaseModel):
     create_dag: Callable[[str, dict[str, Any], Any], Any] = Field(
         ..., description="Function to create the DAG"
     )
-    format: FormatterSpec | Callable = Field(
+    formatter: FormatterSpec | Callable = Field(
         default=None, description="Optional formatter spec or function"
     )
     passed_predicate: Callable[[dict[str, Any]], bool] = Field(
         default=lambda result: False,
         description="Function to determine if the summarization passed",
     )
-    summarize: SummarizerSpec | Callable = Field(
+    summarizer: SummarizerSpec | Callable = Field(
         default=None, description="Optional summarizer spec or function"
     )
     turns: TurnMappingSpec = Field(default=None, description="Optional turns configuration")

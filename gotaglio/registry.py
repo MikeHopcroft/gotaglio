@@ -61,28 +61,28 @@ class Registry:
             )
         return self._pipelines[name]
 
-    # TODO: move these functions out of registry.
-    def summarize(self, results):
-        pipeline = self.create_pipeline(results)
-        console = MakeConsole()
-        pipeline.summarize(console, results)
-        console.render()
+    # # TODO: move these functions out of registry.
+    # def summarize(self, results):
+    #     pipeline = self.create_pipeline(results)
+    #     console = MakeConsole()
+    #     pipeline.summarize(console, results)
+    #     console.render()
 
-    def format(self, results, case_uuid_prefix):
-        pipeline = self.create_pipeline(results)
-        console = MakeConsole()
-        pipeline.format(console, results, case_uuid_prefix)
-        console.render()
+    # def format(self, results, case_uuid_prefix):
+    #     pipeline = self.create_pipeline(results)
+    #     console = MakeConsole()
+    #     pipeline.format(console, results, case_uuid_prefix)
+    #     console.render()
 
-    def compare(self, results_a, results_b):
-        pipeline = self.create_pipeline(results_a)
-        console = MakeConsole()
-        pipeline.compare(console, results_a, results_b)
-        console.render()
+    # def compare(self, results_a, results_b):
+    #     pipeline = self.create_pipeline(results_a)
+    #     console = MakeConsole()
+    #     pipeline.compare(console, results_a, results_b)
+    #     console.render()
 
-    def create_pipeline(self, results):
-        pipeline_name = results["metadata"]["pipeline"]["name"]
-        pipeline_config = results["metadata"]["pipeline"]["config"]
-        pipeline_factory = self.pipeline(pipeline_name)
-        pipeline = pipeline_factory(self, pipeline_config, {})
-        return pipeline
+    # def create_pipeline(self, results):
+    #     pipeline_name = results["metadata"]["pipeline"]["name"]
+    #     pipeline_config = results["metadata"]["pipeline"]["config"]
+    #     pipeline_factory = self.pipeline(pipeline_name)
+    #     pipeline = pipeline_factory(self, pipeline_config, {})
+    #     return pipeline

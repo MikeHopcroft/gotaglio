@@ -197,7 +197,7 @@ simple_pipeline_spec = PipelineSpec(
     create_dag=stages,
     # Optional FormatterSpec used by the `format` commend to display a rich
     # transcript of the case.
-    format=FormatterSpec(
+    formatter=FormatterSpec(
         before_case=lambda case: Text(f"Formatting case: {case['case']['uuid']}"),
         after_case=lambda case: Text(
             f"Finished formatting case: {case['case']['uuid']}"
@@ -212,7 +212,7 @@ simple_pipeline_spec = PipelineSpec(
     passed_predicate=lambda result: glom(result, "stages.assess", default=1) == 0,
     # Optional SummarizerSpec used by the `summarize` command to
     # summarize the results of the run.
-    summarize=SummarizerSpec(
+    summarizer=SummarizerSpec(
         columns=[
             ColumnSpec(name="cost", contents=cost_cell),
             keywords_column,

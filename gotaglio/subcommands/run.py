@@ -35,8 +35,8 @@ def run_pipeline2(pipeline_specs: PipelineSpecs, args):
 
     run_with_progress_bar(director)
 
-    director.write_results()
-    director.summarize_results()
+    director.write()
+    director.summarize()
 
 
 def run_pipeline(registry_factory, args):

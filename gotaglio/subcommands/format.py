@@ -21,7 +21,7 @@ def format_command(pipeline_specs: PipelineSpecs, args):
     spec = pipeline_specs.get(pipeline_name)
     
     console = MakeConsole()
-    format(spec.format, spec.turns, console, results, case_uuid_prefix)
+    format(spec, console, results, case_uuid_prefix)
     console.render()
 
 

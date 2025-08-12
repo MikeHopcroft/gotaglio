@@ -4,12 +4,10 @@ from typing import Any
 from .dag import build_dag_from_spec
 from .director import process_one_case
 from .exceptions import ExceptionContext
-from .format import format
 from .mocks import Flakey, Perfect
 from .registry import Registry
 from .shared import apply_patch, flatten_dict
 from .pipeline_spec import PipelineSpec, TurnMappingSpec
-from .summarize import summarize
 
 
 class Pipeline2:
@@ -20,10 +18,7 @@ class Pipeline2:
         flat_config_patch: dict[str, Any],
         global_registry: Registry,
     ):
-        self._passed_predicate = spec.passed_predicate
-        self._turn_spec = spec.turns
-        self._summarizer = spec.summarize
-        self._formatter = spec.format
+        self._spec = spec
 
         # Merge and validate configurations.
         self._config = apply_patch(
@@ -57,24 +52,6 @@ class Pipeline2:
 
     def get_dag(self):
         return self._dag
-
-    def format(self, make_console, runlog, uuid_prefix=None):
-        if callable(self._formatter):
-            self._formatter(make_console, runlog)
-        else:
-            format(self._formatter, self._turn_spec, make_console, runlog, uuid_prefix)
-
-    def summarize(self, make_console, runlog):
-        if callable(self._summarizer):
-            self._summarizer(make_console, runlog)
-        else:
-            summarize(
-                self._passed_predicate,
-                self._summarizer,
-                self._turn_spec,
-                make_console,
-                runlog,
-            )
 
 
 def create_turns_dag(turn_spec: TurnMappingSpec, turn_dag):
