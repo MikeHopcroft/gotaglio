@@ -26,8 +26,17 @@ def column_spec(
 
 
 class FormatterSpec(BaseModel):
-    frontmatter: Callable[[dict[str, Any]], None] = Field(
-        default=None, description="Function to format the frontmatter"
+    before_case: Callable[[dict[str, Any]], None] = Field(
+        default=None, description="Function to generate contents before each case"
+    )
+    after_case: Callable[[dict[str, Any]], None] = Field(
+        default=None, description="Function to generate contents after each case"
+    )
+    before_turn: Callable[[dict[str, Any]], None] = Field(
+        default=None, description="Function to generate contents before each case"
+    )
+    after_turn: Callable[[dict[str, Any]], None] = Field(
+        default=None, description="Function to generate contents after each case"
     )
 
 

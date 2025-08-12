@@ -3,9 +3,15 @@
 * Today
   * # TODO: move these functions out of registry.
   * # TODO: what about optional uuid_prefix parameter?
+  * extract tokenizer to own file
+  * passed predicate moves to PipelineSpec
+  * pipeline.diff_configs()
   * pipeline preview() operation
   * x Pipelines should have the ability to locally register models.
-  * Extensible format
+  * . Extensible format
+    * Port cli samples - simple, calculator, menu
+    * Port notebooks
+    * Create tour demo and docs - show all commands and sub-commands
   * Extensible compare
   * Rewrite samples, update documentation
   * Type annotations everywhere

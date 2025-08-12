@@ -13,6 +13,7 @@ from gotaglio.director2 import Director2
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.make_console import MakeConsole
 from gotaglio.pipeline_spec import (
+    FormatterSpec,
     PipelineSpec,
     SummarizerSpec,
     TurnMappingSpec,
@@ -141,6 +142,12 @@ spec = PipelineSpec(
         initial="value", expected="answer", observed="extract", user="user"
     ),
     create_dag=create_dag,
+    format=FormatterSpec(
+        before_case=lambda case: Text(f"Formatting case: {case['case']['uuid']}"),
+        after_case=lambda case: Text(f"Finished formatting case: {case['case']['uuid']}"),
+        before_turn=lambda case: Text(f"Formatting turn: {case['case']['user']}"),
+        after_turn=lambda case: Text(f"Finished formatting turn: {case['case']['user']}"),
+    ),
     summarize=SummarizerSpec(
         columns=[
             ColumnSpec(name="cost", contents=cost_cell),

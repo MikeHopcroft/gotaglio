@@ -5,18 +5,21 @@ from .lazy_imports import tiktoken
 from .pipeline_spec import FormatterSpec, TurnMappingSpec
 from .shared import to_json_string
 
-class Tokenizer:
-  def __init__(self):
-    self._tokenizer = None
 
-  def encode(self, text: str) -> list[int]:
-    # Lazily load the tokenizer here so that we don't slow down
-    # other scenarios that don't need it.
-    if self._tokenizer is None:
-      self._tokenizer = tiktoken.get_encoding("cl100k_base")
-    return self._tokenizer.encode(text)
-  
+class Tokenizer:
+    def __init__(self):
+        self._tokenizer = None
+
+    def encode(self, text: str) -> list[int]:
+        # Lazily load the tokenizer here so that we don't slow down
+        # other scenarios that don't need it.
+        if self._tokenizer is None:
+            self._tokenizer = tiktoken.get_encoding("cl100k_base")
+        return self._tokenizer.encode(text)
+
+
 tokenizer = Tokenizer()
+
 
 # If uuid_prefix is specified, format those cases whose uuids start with
 # uuid_prefix. Otherwise, format all cases.
@@ -52,6 +55,11 @@ def format(
                 continue
             turn_count = f" ({len(result['stages']['turns'])} turn{'s' if len(result['stages']['turns']) != 1 else ''})"
             console.print(f"## Case: {short_id(result['case']['uuid'])}{turn_count}")
+
+            if formatter_spec.before_case:
+                console.print(formatter_spec.before_case(result))
+
+            # TODO: configurable
             console.print(
                 f"**Keywords:** {', '.join(result['case'].get('keywords', []))}  "
             )
@@ -63,7 +71,7 @@ def format(
                 else:
                     console.print()
                 if turn_result["succeeded"]:
-                    cost = turn_result["stages"]["assess"] # TODO: configurable
+                    cost = turn_result["stages"]["assess"]  # TODO: configurable - use passed predicate
                     if cost == 0:
                         console.print(f"### Turn {index + 1}: **PASSED**  ")
                     else:
@@ -72,9 +80,14 @@ def format(
                         )
                     console.print()
 
+                    if formatter_spec.before_turn:
+                        console.print(formatter_spec.before_turn(turn_result))
+                    # TODO: configurable
                     input_tokens = sum(
                         len(tokenizer.encode(message["content"]))
-                        for message in turn_result["stages"]["prepare"] # TODO: configurable ["messages"]
+                        for message in turn_result["stages"][
+                            "prepare"
+                        ]  # TODO: configurable ["messages"]
                     )
                     # console.print(f"Complete menu tokens: {complete_tokens}  ")
                     console.print(
@@ -82,8 +95,12 @@ def format(
                     )
                     console.print()
 
-                    for x in turn_result["stages"]["prepare"]: # TODO: configurable ["messages"]
-                        if x["role"] == "assistant" or x["role"] == "system":  # TODO: configurable
+                    for x in turn_result["stages"][
+                        "prepare"
+                    ]:  # TODO: configurable ["messages"]
+                        if (
+                            x["role"] == "assistant" or x["role"] == "system"
+                        ):  # TODO: configurable
                             console.print(f"**{x['role']}:**")
                             console.print("```json")
                             console.print(x["content"])
@@ -93,12 +110,14 @@ def format(
                         console.print()
                     console.print(f"**assistant:**")
                     console.print("```json")
-                    console.print(
-                        to_json_string(turn_result["stages"]["extract"])
-                    )
+                    console.print(to_json_string(turn_result["stages"]["extract"]))
                     console.print("```")
                     console.print()
 
+                    if formatter_spec.after_turn:
+                        console.print(formatter_spec.after_turn(turn_result))
+
+                    # TODO: configurable
                     if cost > 0:
                         console.print(f"**expected {turn_result["case"]["answer"]}:**")
                         # console.print("**Repairs:**")
@@ -117,8 +136,9 @@ def format(
                     console.print(f"### Turn {index + 1}: **ERROR**  ")
                     console.print(f"Error: {turn_result['exception']['message']}")
                     console.print("~~~")
-                    console.print(
-                        f"Traceback: {turn_result['exception']['traceback']}"
-                    )
+                    console.print(f"Traceback: {turn_result['exception']['traceback']}")
                     console.print(f"Time: {turn_result['exception']['time']}")
                     console.print("~~~")
+
+            if formatter_spec.after_case:
+                console.print(formatter_spec.after_case(result))
