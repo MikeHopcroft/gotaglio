@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import yaml
 
 from .templating import jinja2_template
 from .constants import app_configuration
@@ -87,7 +88,7 @@ def read_log_file_from_prefix(prefix):
 
 
 def log_file_name_from_prefix(prefix):
-    log_folder  = app_configuration["log_folder"]
+    log_folder = app_configuration["log_folder"]
     if prefix.lower() == "latest":
         filenames = get_files_sorted_by_creation(log_folder)
         if not filenames:
@@ -119,18 +120,112 @@ def read_json_file(filename, optional=False):
     return result
 
 
+def read_data_file(filename, optional=False, search=False):
+    """
+    Find and read a json or yaml file and return its content.
+    The file format is determined by the file extension.
+      .json files are parsed as JSON.
+      .yaml .yml files are parsed as YAML.
+
+    If `search` is True, the function will search for the file in folders
+    along the path from the current working directory to the root directory.
+
+    If the file does not exist and `optional` is True, return an empty
+    dictionary. Otherwise, raise a FileNotFoundError.
+
+    :param filename: The path to the file to read.
+    :param optional: If True, return an empty dictionary if the file does not exist.
+    :param search: If True, search for the file in parent directories.
+    :return: The content of the file as a dictionary or an empty dictionary if the file does not exist.
+    """
+
+    def find_file(filename, search_path=None):
+        """Helper function to find a file, optionally searching parent directories."""
+        if search_path is None:
+            search_path = Path.cwd()
+
+        # First try the direct path
+        file_path = Path(filename)
+        if file_path.is_absolute():
+            return file_path if file_path.exists() else None
+
+        # If not absolute, try relative to search_path
+        candidate = search_path / filename
+        if candidate.exists():
+            return candidate
+
+        # If search is enabled, look in parent directories
+        if search:
+            current = search_path
+            while current != current.parent:  # Stop at root
+                candidate = current / filename
+                if candidate.exists():
+                    return candidate
+                current = current.parent
+
+        return None
+
+    # Find the file
+    file_path = find_file(filename)
+
+    if file_path is None:
+        if optional:
+            return {}
+        else:
+            raise FileNotFoundError(f"File not found: {filename}")
+
+    # Determine file format from extension
+    suffix = file_path.suffix.lower()
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            if suffix == ".json":
+                return json.load(file)
+            elif suffix in [".yaml", ".yml"]:
+                return yaml.safe_load(file)
+            else:
+                raise ValueError(
+                    f"Unsupported file format: {suffix}. Only .json, .yaml, and .yml are supported."
+                )
+    except (json.JSONDecodeError, yaml.YAMLError) as e:
+        raise ValueError(f"Error parsing {suffix} file '{file_path}': {e}")
+    except Exception as e:
+        raise RuntimeError(f"Error reading file '{file_path}': {e}")
+
+
 def write_json_file(filename, data):
     with open(filename, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
 
+
+def write_data_file(filename, data):
+    """
+    Write data to a file in JSON or YAML format based on the file extension.
+    If the file extension is .json, the data will be written as JSON.
+    If the file extension is .yaml or .yml, the data will be written as YAML.
+
+    :param filename: The path to the file to write.
+    :param data: The data to write to the file.
+    """
+    suffix = Path(filename).suffix.lower()
+    with open(filename, "w", encoding="utf-8") as file:
+        if suffix == ".json":
+            json.dump(data, file, indent=2, ensure_ascii=False)
+        elif suffix in [".yaml", ".yml"]:
+            yaml.safe_dump(data, file, allow_unicode=True)
+        else:
+            raise ValueError(f"Unsupported file format: {suffix}. Only .json, .yaml, and .yml are supported.")
+
+
 def to_json_string(data):
     """
     Convert a Python object to a JSON string with UTF-8 encoding.
-    
+
     :param data: The Python object to convert.
     :return: A JSON string representation of the object.
     """
     return json.dumps(data, indent=2, ensure_ascii=False)
+
 
 def parse_patches(path_bindings):
     """Parse key=value arguments into a dictionary."""
@@ -158,6 +253,8 @@ def apply_patch(target_dict, patches):
     apply_patch_in_place(result, patches)
     return result
 
+
+def apply_patch_in_place(target_dict, patches):
     """
     Modify an existing dictionary by applying a series of dot-separated
     key-value pairs as a patch to a a deep copy of an existing dictionary.
@@ -165,7 +262,6 @@ def apply_patch(target_dict, patches):
     :param target_dict: The dictionary to be patched.
     :param patches: A dictionary with dot-separated keys and their corresponding values.
     """
-def apply_patch_in_place(target_dict, patches):
     for key, value in patches.items():
         # Ensure value is not a dict
         if isinstance(value, dict):
