@@ -1,6 +1,4 @@
-from io import StringIO
 from rich.console import Console
-from rich.markdown import Markdown as RichMarkdown
 import sys
 from rich.text import Text
 

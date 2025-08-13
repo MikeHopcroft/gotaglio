@@ -1,8 +1,10 @@
 from glom import glom
 import json
 import os
+from rich.console import Console
 from rich.text import Text
 import sys
+from typing import Any
 
 # Add the parent directory to the sys.path so that we can import from the
 # gotaglio package, as if it had been installed.
@@ -10,6 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from gotaglio.dag import build_dag_from_linear
 from gotaglio.exceptions import ExceptionContext
+from gotaglio.format import format_messages
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
@@ -20,8 +23,9 @@ from gotaglio.pipeline_spec import (
 )
 from gotaglio.pipeline2 import Internal, Prompt
 from gotaglio.repair import Repair
-from gotaglio.shared import build_template
+from gotaglio.shared import build_template, to_json_string
 from gotaglio.summarize import keywords_column
+from gotaglio.tokenizer import tokenizer
 
 
 def stages(name, config, registry):
@@ -162,7 +166,64 @@ def predicate(result):
 
     Used by the `format` and `summarize` sub-commands.
     """
-    return glom(result, "stages.assess.cost", None) == 0
+    return glom(result, "stages.assess.cost", default=None) == 0
+
+
+# def before_turn(turn_result):
+#     """
+#     Function to be called before formatting each turn.
+#     It can be used to print additional information or perform setup tasks.
+#     """
+#     input_tokens = sum(
+#         len(tokenizer.encode(message["content"]))
+#         for message in turn_result["stages"]["prepare"]
+#     )
+#     return Text(
+#         f"Input tokens: {input_tokens}, output tokens: {len(tokenizer.encode(turn_result['stages']['infer']))}"
+#     )
+
+
+def before_case(console: Console, result: dict[str, Any]):
+    console.print(
+        f"**Keywords:** {', '.join(glom(result, 'case.keywords', default=[]))}  "
+    )
+    console.print()
+
+
+def format_turn(console: Console, turn_index, turn_result: dict[str, Any]):
+    passed = predicate(turn_result)
+    if passed:
+        console.print(f"### Turn {turn_index + 1}: **PASSED**  ")
+    else:
+        cost = glom(turn_result, "stages.assess.cost", default=None)
+        console.print(f"### Turn {turn_index + 1}: **FAILED:** (cost={cost})  ")
+    console.print()
+
+    input_tokens = sum(
+        len(tokenizer.encode(message["content"]))
+        for message in turn_result["stages"]["prepare"]
+    )
+    console.print(
+        f"Input tokens: {input_tokens}, output tokens: {len(tokenizer.encode(turn_result['stages']['infer']))}  \n"
+    )
+
+    format_messages(console, turn_result["stages"]["prepare"], collapse=["system"])
+    console.print("**assistant:**")
+    console.print("```json")
+    console.print(to_json_string(turn_result["stages"]["extract"]))
+    console.print("```")
+    console.print()
+
+    if passed:
+        console.print("**No repairs**")
+    else:
+        console.print("**expected:**")
+        console.print("```json")
+        console.print(to_json_string(turn_result["case"]["expected"]))
+        console.print("```")
+        console.print("**Repairs:**")
+        for step in turn_result["stages"]["assess"]["steps"]:
+            console.print(f"* {step}")
 
 
 restaurant_pipeline_spec = PipelineSpec(
@@ -212,18 +273,20 @@ restaurant_pipeline_spec = PipelineSpec(
     # Optional FormatterSpec used by the `format` commend to display a rich
     # transcript of the case.
     formatter=FormatterSpec(
-        before_case=lambda case: Text(f"Formatting case: {case['case']['uuid']}"),
+        before_case=before_case,
         after_case=lambda case: Text(
             f"Finished formatting case: {case['case']['uuid']}"
         ),
-        before_turn=lambda case: Text(f"Formatting turn: {case['case']['user']}"),
-        after_turn=lambda case: Text(
-            f"Finished formatting turn: {case['case']['user']}"
-        ),
+        # before_turn=before_turn,
+        format_turn=format_turn,
+        # after_turn=lambda case: Text(
+        #     f"Finished formatting turn: {case['case']['user']}"
+        # ),
     ),
     # Optional predicate determines whether a case is considered passing.
     # Used by the `format` and `summarize` sub-commands.
-    passed_predicate=lambda result: glom(result, "stages.assess", default=1) == 0,
+    passed_predicate=lambda result: glom(result, "stages.assess.cost", default=None)
+    == 0,
     # Optional SummarizerSpec used by the `summarize` command to
     # summarize the results of the run.
     summarizer=SummarizerSpec(

@@ -1,15 +1,18 @@
 from pydantic import BaseModel, Field
+from rich.console import Console
 from typing import Any, Callable
 
 
 
 class FormatterSpec(BaseModel):
-    before_case: Callable[[dict[str, Any]], None] = Field(
+    before_case: Callable[[Console, dict[str, Any]], None] = Field(
         default=None, description="Function to generate contents before each case"
     )
-    after_case: Callable[[dict[str, Any]], None] = Field(
+    after_case: Callable[[Console, dict[str, Any]], None] = Field(
         default=None, description="Function to generate contents after each case"
     )
+    format_turn: Callable[[Console, int, dict[str, Any]], None] = Field(
+        default=None, description="Function to generate contents for each turn")
     before_turn: Callable[[dict[str, Any]], None] = Field(
         default=None, description="Function to generate contents before each case"
     )

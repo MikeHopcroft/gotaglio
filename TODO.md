@@ -2,13 +2,6 @@
 
 * Finish up formatter
 * Jupyter notebooks
-* Expand/collapse prompt
-
-<details>
-<summary>Click to expand</summary>
-
-This content is initially hidden and will be revealed when the user clicks on the summary.
-</details>
 
 ~~~
 python samples2\restaurant\restaurant.py run restaurant samples2\restaurant\data\cases.yaml prepare.template=samples2\restaurant\data\template.txt infer.model.name=perfect
@@ -17,6 +10,8 @@ python samples2\restaurant\restaurant.py summarize latest
 ~~~
 
 * Today
+  * x Expand/collapse prompt
+  * TODO: model for saving state between formatter spec function calls
   * Handle missing optional PipelineSpec parts (e.g. mappings)
   * x Perhaps TurnMappingSpec becomes MappingSpec with optional `turns` path
   * x Use spec.mappings.turns
