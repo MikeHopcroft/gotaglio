@@ -19,7 +19,8 @@ def format(
         spec.formatter(console, runlog)
     else:
         formatter_spec = spec.formatter
-        turn_spec = spec.turns
+        mapping_spec = spec.mappings
+        using_turns = mapping_spec.turns is not None
 
         # compress = (
         #     str(glom(runlog, "metadata.pipeline.prepare.compress", default="False"))
@@ -44,7 +45,7 @@ def format(
                     continue
                 turn_count = (
                     f" ({len(result['stages']['turns'])} turn{'s' if len(result['stages']['turns']) != 1 else ''})"
-                    if turn_spec is not None
+                    if using_turns
                     else ""
                 )
                 console.print(f"## Case: {short_id(result['case']['uuid'])}{turn_count}")
@@ -58,7 +59,7 @@ def format(
                 )
                 console.print()
 
-                turns = result["stages"]["turns"] if turn_spec is not None else [result]
+                turns = result["stages"]["turns"] if using_turns else [result]
                 for index, turn_result in enumerate(turns):
                     if index > 0:
                         console.print("---")

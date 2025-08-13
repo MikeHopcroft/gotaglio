@@ -13,11 +13,11 @@ from gotaglio.director2 import Director2
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.make_console import MakeConsole
 from gotaglio.pipeline_spec import (
+    ColumnSpec,
     FormatterSpec,
+    MappingSpec,
     PipelineSpec,
     SummarizerSpec,
-    TurnMappingSpec,
-    ColumnSpec,
 )
 from gotaglio.pipeline2 import Internal, Pipeline2, Prompt
 from gotaglio.registry import Registry
@@ -153,7 +153,7 @@ spec = PipelineSpec(
             ColumnSpec(name="user", contents=user_cell),
         ]
     ),
-    turns=TurnMappingSpec(
+    turns=MappingSpec(
         initial="value", expected="answer", observed="extract", user="user"
     ),
 )

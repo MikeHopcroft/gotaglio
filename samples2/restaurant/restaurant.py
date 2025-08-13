@@ -1,4 +1,5 @@
 from glom import glom
+import json
 import os
 from rich.text import Text
 import sys
@@ -13,11 +14,12 @@ from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
     FormatterSpec,
+    MappingSpec,
     PipelineSpec,
     SummarizerSpec,
-    TurnMappingSpec
 )
 from gotaglio.pipeline2 import Internal, Prompt
+from gotaglio.repair import Repair
 from gotaglio.shared import build_template
 from gotaglio.summarize import keywords_column
 
@@ -92,12 +94,23 @@ def stages(name, config, registry):
     # Note that this method will raise an exception if the response is not
     # a number.
     async def extract(context):
-        with ExceptionContext(f"Extracting numerical answer from LLM response."):
-            return float(context["stages"]["infer"])
+        with ExceptionContext(f"Extracting JSON from LLM response."):
+            text = context["stages"]["infer"]
+
+            # Strip off fenced code block markers, if present.
+            marker = "```json\n"
+            if text.startswith(marker):
+                text = text[len(marker) :]
+            text = text.strip("```")
+            return json.loads(text)
 
     # Stage 4: Compare the model response to the expected answer.
     async def assess(context):
-        return context["stages"]["extract"] - context["case"]["answer"]
+        repair = Repair("id", "options", [], ["name"], "name")
+        repair.resetIds()
+        observed = repair.addIds(context["stages"]["extract"]["items"])
+        expected = repair.addIds(context["case"]["turns"][-1]["expected"]["items"])
+        return repair.diff(observed, expected)
 
     # Define the pipeline
     # The dictionary keys supply the names of the stages that make up the
@@ -220,8 +233,12 @@ restaurant_pipeline_spec = PipelineSpec(
             ColumnSpec(name="user", contents=user_cell),
         ]
     ),
-    turns=TurnMappingSpec(
-        initial="cart", expected="expected", observed="extract", user="query"
+    mappings=MappingSpec(
+        turns="turns",
+        initial="cart",
+        expected="expected",
+        observed="extract",
+        user="query",
     ),
 )
 

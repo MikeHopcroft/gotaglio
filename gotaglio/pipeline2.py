@@ -7,7 +7,7 @@ from .exceptions import ExceptionContext
 from .mocks import Flakey, Perfect
 from .registry import Registry
 from .shared import apply_patch, flatten_dict
-from .pipeline_spec import PipelineSpec, TurnMappingSpec
+from .pipeline_spec import MappingSpec, PipelineSpec
 
 
 class Pipeline2:
@@ -35,14 +35,14 @@ class Pipeline2:
         # NOTE: this must be done before spec.create_dag, which accesses
         # models from the registry.
         registry = Registry(global_registry)
-        Flakey(registry, {})
-        Perfect(registry, {})
+        Flakey(registry, spec.mappings,{})
+        Perfect(registry, spec.mappings, {})
 
         # Create the DAG.
         turn_dag = spec.create_dag(spec.name, self._config, registry)
-        if spec.turns is not None:
+        if spec.mappings.turns is not None:
             # Wrap the single-turn DAG to handle multiple turns.
-            self._dag = create_turns_dag(spec.turns, turn_dag)
+            self._dag = create_turns_dag(spec.mappings, turn_dag)
         else:
             # Just running a single turn.
             self._dag = turn_dag
@@ -54,11 +54,11 @@ class Pipeline2:
         return self._dag
 
 
-def create_turns_dag(turn_spec: TurnMappingSpec, turn_dag):
+def create_turns_dag(mapping_spec: MappingSpec, turn_dag):
     async def turns(context):
-        initial = turn_spec.initial
-        expected = turn_spec.expected
-        observed = turn_spec.observed
+        initial = mapping_spec.initial
+        expected = mapping_spec.expected
+        observed = mapping_spec.observed
 
         case = context["case"]
 

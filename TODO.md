@@ -1,7 +1,9 @@
 # TODO
 
 * Today
+  * Handle missing optional PipelineSpec parts (e.g. mappings)
   * Perhaps TurnMappingSpec becomes MappingSpec with optional `turns` path
+  * USe spec.mappings.turns
   * perfect and flakey model parameterized by turns spec
   * Translate gotag.py
   * Code duplication: traceback.format_exc()?

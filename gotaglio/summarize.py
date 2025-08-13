@@ -4,7 +4,7 @@ from rich.text import Text
 from typing import Any, Callable
 
 from .helpers import IdShortener
-from .pipeline_spec import PipelineSpec, column_spec, SummarizerSpec, TurnMappingSpec
+from .pipeline_spec import PipelineSpec, column_spec
 
 
 def summarize(
@@ -26,9 +26,10 @@ class Summarizer:
     ):
         self._passed_predicate = spec.passed_predicate
         self._summarizer_spec = spec.summarizer
-        self._turn_spec = spec.turns
+        self._mapping_spec = spec.mappings
+        self._using_turns = spec.mappings.turns is not None
 
-    # This method is used to summarize the results of each a pipeline run.
+    # This method is used to summarize the results of each pipeline run.
     # It is invoked by the `run`, `rerun`, and `summarize` sub-commands.
     def summarize(self, console, runlog):
         results = runlog["results"]
@@ -42,15 +43,15 @@ class Summarizer:
             def id_cell(result, turn_index):
                 return (
                     short_id(result["case"]["uuid"])
-                    if self._turn_spec is None
+                    if self._using_turns
                     else f"{short_id(result['case']['uuid'])}.{turn_index:02}"
                 )
 
             def status_cell(result, turn_index):
                 succeeded = (
-                    result["succeeded"]
-                    if self._turn_spec is None
-                    else result["stages"]["turns"][turn_index]["succeeded"]
+                    result["stages"]["turns"][turn_index]["succeeded"]
+                    if self._using_turns
+                    else result["succeeded"]
                 )
                 return (
                     Text("COMPLETE", style="bold green")
@@ -94,10 +95,10 @@ class Summarizer:
             for result in results:
                 turn_results = (
                     glom(result, "stages.turns", default=[])
-                    if self._turn_spec is not None
+                    if self._using_turns
                     else result
                 )
-                if self._turn_spec:
+                if self._using_turns:
                     for index, turn_result in enumerate(turn_results):
                         self.render_one_row(table, columns, result, index, turn_result)
                 else:

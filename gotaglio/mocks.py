@@ -1,4 +1,7 @@
+import json
+
 from .models import Model
+from .pipeline_spec import MappingSpec
 
 class Flakey(Model):
     """
@@ -8,14 +11,15 @@ class Flakey(Model):
       3. raising an exception
     """
 
-    def __init__(self, registry, configuration):
+    def __init__(self, registry, mappings: MappingSpec, configuration):
         self._counter = -1
+        self._mappings = mappings
         registry.register_model("flakey", self)
 
     async def infer(self, messages, result=None):
         self._counter += 1
         if self._counter % 3 == 0:
-            return f'{result["case"]["answer"]}'
+            return f'{result["case"][self._mappings.expected]}'
         elif self._counter % 3 == 1:
             return "hello world"
         else:
@@ -30,11 +34,18 @@ class Perfect(Model):
     from result["case"]["answer"]
     """
 
-    def __init__(self, registry, configuration):
+    def __init__(self, registry, mappings: MappingSpec, configuration):
         registry.register_model("perfect", self)
+        self._mappings = mappings
 
     async def infer(self, messages, result=None):
-        return f'{result["case"]["answer"]}'
+        # TODO: need to JSON serialize for non-strings
+        value = result["case"][self._mappings.expected]
+        if isinstance(value, str):
+            return value
+        else:
+            return json.dumps(value, ensure_ascii=False)
+        # return f'{result["case"][self._mappings.expected]}'
 
     def metadata(self):
         return {}

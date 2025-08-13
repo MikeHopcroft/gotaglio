@@ -219,7 +219,7 @@ simple_pipeline_spec = PipelineSpec(
             ColumnSpec(name="user", contents=user_cell),
         ]
     ),
-    # turns=TurnMappingSpec(
+    # turns=MappingSpec(
     #     initial="value", expected="answer", observed="extract", user="user"
     # ),
 )

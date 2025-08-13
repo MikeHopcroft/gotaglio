@@ -41,10 +41,21 @@ class SummarizerSpec(BaseModel):
     columns: list[ColumnSpec] = Field([], description="List of columns to summarize")
 
 
-class TurnMappingSpec(BaseModel):
-    initial: str = Field(..., min_length=1, description="Initial turn value")
+class MappingSpec(BaseModel):
+    # If the test case is multi-turn
+    #   path to the turns collection in the case
+    # Otherwise None
+    turns: str = Field(default=None, min_length=1, description="Turns collection")
+    # If the test case is multi-turn
+    #   path to the initial value of the sequence of turns
+    #   (e.g. empty shopping cart, zero accumulator)
+    # Otherwise None
+    initial: str = Field(default=None, min_length=1, description="Initial turn value")
+    # Path to the expected value in the suite, relative to the turn or the case
     expected: str = Field(..., min_length=1, description="Expected turn value")
+    # Path to the observed value in stages, relative to the turn or the case
     observed: str = Field(..., min_length=1, description="Observed turn value")
+    # Path to the user input in the suite, relative to the turn or the case
     user: str = Field(..., min_length=1, description="User text")
 
 
@@ -65,7 +76,7 @@ class PipelineSpec(BaseModel):
     summarizer: SummarizerSpec | Callable = Field(
         default=None, description="Optional summarizer spec or function"
     )
-    turns: TurnMappingSpec = Field(default=None, description="Optional turns configuration")
+    mappings: MappingSpec = Field(default=None, description="Optional turns configuration")
     # TODO: Compare
 
 class PipelineSpecs:
