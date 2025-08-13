@@ -129,6 +129,9 @@ class Director2:
 
         print(f"Results written to {self._output_file}")
         return {"log": self._output_file, "results": self._results}
+    
+    def diff_configs(self):
+        return self._pipeline.diff_configs()
 
 
 async def process_one_case(case, dag, completed):

@@ -1,5 +1,6 @@
 # TODO
 
+* Does director need format() and summarize()?
 * Finish up formatter
 * Jupyter notebooks
 * x Calculator formatting
@@ -54,7 +55,7 @@ python samples2\calc\calc.py run calc samples2\calc\data\cases.yaml prepare.temp
   * pipelines becomes Pipelines or PipelineRegistry
   * Test default formatter, summarizer, pass_predicate, turn_mapper
   * Consistant turn_mapper name
-  * pipeline.diff_configs()
+  * x pipeline.diff_configs()
   * pipeline preview() operation
   * # TODO: move these functions out of registry.
   * # TODO: what about optional uuid_prefix parameter?

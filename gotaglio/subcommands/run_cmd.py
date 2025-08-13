@@ -27,9 +27,9 @@ def run_pipeline2(pipeline_specs: PipelineSpecs, args):
     print(f"  id: {director._id}")
     print(f"  cases: {cases_file}")
     print(f"  pipeline: {pipeline_name}")
-    # diff = director._pipeline.diff_configs()
-    # lines = [f"    {k}: {v1} => {v2}" for k, v1, v2 in diff]
-    # print("\n".join(lines))
+    diff = director.diff_configs()
+    lines = [f"    {k}: {v1} => {v2}" for k, v1, v2 in diff]
+    print("\n".join(lines))
     print(f"  concurrancy: {concurrency}")
     print("")
 
@@ -70,9 +70,9 @@ def rerun_pipeline2(pipeline_specs: PipelineSpecs, args):
     print(f"  id: {director._id}")
     print(f"  cases: {log_file_name}")
     print(f"  pipeline: {pipeline_name}")
-    # diff = director._pipeline.diff_configs()
-    # lines = [f"    {k}: {v1} => {v2}" for k, v1, v2 in diff]
-    # print("\n".join(lines))
+    diff = director.diff_configs()
+    lines = [f"    {k}: {v1} => {v2}" for k, v1, v2 in diff]
+    print("\n".join(lines))
     print(f"  concurrancy: {concurrency}")
     print("")
 

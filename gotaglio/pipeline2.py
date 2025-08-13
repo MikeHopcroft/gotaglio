@@ -53,6 +53,20 @@ class Pipeline2:
     def get_dag(self):
         return self._dag
 
+    def diff_configs(self):
+        default_config = flatten_dict(self._spec.configuration)
+        config = flatten_dict(self._config)
+        diff = []
+        for k, v in config.items():
+            if k not in default_config:
+                diff.append((k, None, config[k]))
+            elif default_config[k] != v and not isinstance(default_config[k], Internal):
+                diff.append((k, format_config(default_config[k]), v))
+        for k, v in default_config.items():
+            if k not in config and not isinstance(v, Internal):
+                diff.append((k, format_config(default_config[k]), None))
+        return diff
+
 
 def create_turns_dag(mapping_spec: MappingSpec, turn_dag):
     async def turns(context):
