@@ -136,7 +136,7 @@ def cost_cell(result, turn_index):
     Provides contents and formatting for the cost cell for the summary table.
     The cost is the difference between the model's response and the expected answer.
     """
-    cost = glom(result, f"stages.assess", default=None)
+    cost = glom(result, f"stages.turns.{turn_index}.stages.assess.cost", default=None)
     cost_text = "" if cost == None else f"{cost:.2f}"
     return (
         Text(cost_text, style="bold green")
@@ -162,7 +162,7 @@ def predicate(result):
 
     Used by the `format` and `summarize` sub-commands.
     """
-    return glom(result, "stages.assess", default=1) == 0
+    return glom(result, "stages.assess.cost", None) == 0
 
 
 restaurant_pipeline_spec = PipelineSpec(

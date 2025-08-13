@@ -17,11 +17,11 @@
       "name": "format",
       "type": "debugpy",
       "request": "launch",
-      "program": "samples2/simple/simple.py",
+      "program": "samples2/restaurant/restaurant.py",
       "console": "integratedTerminal",
       "args": [
         "format",
-        "651",
+        "107",
       ]
     },
     {
@@ -64,7 +64,7 @@
         "--concurrency",
         "1",
         "prepare.template=samples2/restaurant/data/template.txt",
-        "infer.model.name=perfect"
+        "infer.model.name=gpt4o"
       ]
     },
     {

@@ -21,7 +21,7 @@
             size: "grande"
             options:
               - name: "vanilla syrup"
-          - name: "decaf"
-            quantity: 1
-          - name: "nonfat milk"
-            quantity: 1
+              - name: "decaf"
+                quantity: 1
+              - name: "nonfat milk"
+                quantity: 1
