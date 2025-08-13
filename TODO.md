@@ -1,23 +1,26 @@
 # TODO
 
 * Today
+  * Perhaps TurnMappingSpec becomes MappingSpec with optional `turns` path
+  * perfect and flakey model parameterized by turns spec
   * Translate gotag.py
   * Code duplication: traceback.format_exc()?
-  * Rename run.py to run_command.py and etc.
+  * x Rename run.py to run_command.py and etc.
   * x Abstract looking up pipeline spec
   * Translate rerun
   * . Translate summarize
   * Continue cleaning up TODOs in Pipeline2.format
-  * format.py's format() should take spec
-  * summarize.py's summarize should take spec
+  * x format.py's format() should take spec
+  * x summarize.py's summarize should take spec
   * Naming format, formatter, etc.
   * Do we need both Director.summarize() and summarize()?
+  * Formatting cleanup/refactor
     * x Director2.format_results()
     * x Pipeline2.format()
     * x format.py: * format()
     * x FormatterSpec
     * Gotaglio.format()
-    * PipelineSpec.format
+    * x PipelineSpec.format
     * formatter_spec parameter and local variable
     * Registry.format()
   * Dealing with turns in format, summarize, compare

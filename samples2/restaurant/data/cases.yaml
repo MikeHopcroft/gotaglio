@@ -1,0 +1,27 @@
+- uuid: 1231c4df-bba6-42cd-a3ae-24f31d5503fa
+  keywords:
+    - numbers
+  cart:
+    items: []
+  turns:
+    - user: I'll have a grande vanilla latte
+      expected:
+        items:
+          - name: "latte"
+            quantity: 1
+            size: "grande"
+            options:
+              - name: "vanilla syrup"
+                amount: "regular"
+    - user: Actually make that nonfat and decaf
+      expected:
+        items:
+          - name: "latte"
+            quantity: 1
+            size: "grande"
+            options:
+              - name: "vanilla syrup"
+          - name: "decaf"
+            quantity: 1
+          - name: "nonfat milk"
+            quantity: 1

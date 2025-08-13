@@ -15,6 +15,7 @@ from gotaglio.pipeline_spec import (
     FormatterSpec,
     PipelineSpec,
     SummarizerSpec,
+    TurnMappingSpec
 )
 from gotaglio.pipeline2 import Internal, Prompt
 from gotaglio.shared import build_template
@@ -151,12 +152,12 @@ def predicate(result):
     return glom(result, "stages.assess", default=1) == 0
 
 
-simple_pipeline_spec = PipelineSpec(
+restaurant_pipeline_spec = PipelineSpec(
     # Pipeline name used in `gotag run <pipeline>.`
-    name="calculator",
+    name="restaurant",
     #
     # Pipeline description shown by `gotag pipelines.`
-    description="A simple calculator pipeline",
+    description="A multi-turn restaurant ordering pipeline",
     #
     # Default configuration values for each pipeline stage.
     # The structure and interpretation of each configuration dict is
@@ -219,14 +220,14 @@ simple_pipeline_spec = PipelineSpec(
             ColumnSpec(name="user", contents=user_cell),
         ]
     ),
-    # turns=TurnMappingSpec(
-    #     initial="value", expected="answer", observed="extract", user="user"
-    # ),
+    turns=TurnMappingSpec(
+        initial="cart", expected="expected", observed="extract", user="query"
+    ),
 )
 
 
 def go():
-    main([simple_pipeline_spec])
+    main([restaurant_pipeline_spec])
 
 
 if __name__ == "__main__":
