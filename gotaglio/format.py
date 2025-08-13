@@ -71,7 +71,7 @@ def format(
                 )
                 console.print()
 
-                if formatter_spec.before_case:
+                if formatter_spec and formatter_spec.before_case:
                     formatter_spec.before_case(console, result)
 
                 turns = result["stages"]["turns"] if using_turns else [result]
@@ -80,7 +80,7 @@ def format(
                         spec, formatter_spec, console, index, result, turn_result
                     )
 
-                if formatter_spec.after_case:
+                if formatter_spec and formatter_spec.after_case:
                     console.print(formatter_spec.after_case(result))
 
 
@@ -90,7 +90,7 @@ def format_one_turn(spec, formatter_spec, console, index, result, turn_result):
     else:
         console.print()
     if turn_result["succeeded"]:
-        if formatter_spec.format_turn:
+        if formatter_spec and formatter_spec.format_turn:
             formatter_spec.format_turn(console, index, turn_result)
         else:
             format_messages(

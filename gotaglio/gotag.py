@@ -1,12 +1,17 @@
 import asyncio
 import nest_asyncio
+from typing import Any
 import uuid
 
 from .constants import app_configuration_values
 from .director import Director
-from .models import register_models
-from .registry import Registry
+from .director2 import Director2
+from .format import format
+from .make_console import MakeConsole
+from .pipeline_spec import PipelineSpec, PipelineSpecs, PipelineSpecs
 from .shared import apply_patch_in_place, read_json_file, read_log_file_from_prefix
+from .summarize import summarize
+
 
 class Gotaglio:
     """
@@ -14,20 +19,13 @@ class Gotaglio:
     """
 
     # TODO: FIX THIS. Add merging.
-    def __init__(self, pipelines, config_patch={}):
+    def __init__(
+        self, pipeline_specs: list[PipelineSpec], config_patch: dict[str, Any] = {}
+    ):
         # For running asyncio in Jupyter
         nest_asyncio.apply()
-
+        self._pipeline_specs = PipelineSpecs(pipeline_specs)
         apply_patch_in_place(app_configuration_values, config_patch)
-
-        def create_registry():
-            registry = Registry()
-            for pipeline in pipelines:
-                registry.register_pipeline(pipeline)
-            register_models(registry)
-            return registry
-
-        self._registry_factory = create_registry
 
     def add_ids(self, cases, force=False):
         # TODO: allow either a runlog object or a string id prefix
@@ -47,9 +45,12 @@ class Gotaglio:
 
     def format(self, runlog_or_prefix, case_uuid_prefix=None):
         runlog = runlog_from_runlog_or_prefix(runlog_or_prefix)
-        registry = self._registry_factory()
-        x = registry.format(runlog, case_uuid_prefix)
-        return x
+        pipeline_name = runlog["metadata"]["pipeline"]["name"]
+        pipeline_spec = self._pipeline_specs.get(pipeline_name)
+
+        console = MakeConsole()
+        format(pipeline_spec, console, runlog, case_uuid_prefix)
+        console.render()
 
     def load(self, uuid_prefix):
         return read_log_file_from_prefix(uuid_prefix)
@@ -62,11 +63,11 @@ class Gotaglio:
             raise Exception("No pipeline metadata found in results file")
 
         pipeline_name = metadata["pipeline"]["name"]
+        pipeline_spec = self._pipeline_specs.get(pipeline_name)
         replacement_config = metadata["pipeline"]["config"]
 
-        director = Director(
-            self._registry_factory,
-            pipeline_name,
+        director = Director2(
+            pipeline_spec,
             cases,
             replacement_config,
             flat_config_patch,
@@ -74,10 +75,10 @@ class Gotaglio:
         )
 
         asyncio.run(director.process_all_cases(ProgressMock(), completed_mock))
-        director.summarize_results()
+        director.summarize()
 
         if save:
-            director.write_results()
+            director.write()
 
         return director._results
 
@@ -89,10 +90,10 @@ class Gotaglio:
         concurrency=2,
         save=False,
     ):
+        pipeline_spec = self._pipeline_specs.get(pipeline_name)
         cases = cases_from_cases_or_filename(cases_or_filename)
-        director = Director(
-            self._registry_factory,
-            pipeline_name,
+        director = Director2(
+            pipeline_spec,
             cases,
             None,
             flat_config_patch,
@@ -100,20 +101,24 @@ class Gotaglio:
         )
 
         asyncio.run(director.process_all_cases(ProgressMock(), completed_mock))
-        director.summarize_results()
+        director.summarize()
 
         if save:
-            director.write_results()
+            director.write()
 
         return director._results
 
     def save(self, runlog, filename=None):
+        # TODO: implement
         pass
 
     def summarize(self, runlog_or_prefix):
         runlog = runlog_from_runlog_or_prefix(runlog_or_prefix)
-        registry = self._registry_factory()
-        registry.summarize(runlog)
+        pipeline_name = runlog["metadata"]["pipeline"]["name"]
+        pipeline_spec = self._pipeline_specs.get(pipeline_name)
+        console = MakeConsole()
+        summarize(pipeline_spec, console, runlog)
+        console.render()
 
 
 def runlog_from_runlog_or_prefix(runlog_or_prefix):

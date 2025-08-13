@@ -11,7 +11,7 @@ from .subcommands.help_cmd import show_help
 from .subcommands.history_cmd import show_history
 from .subcommands.list_models_cmd import list_models
 from .subcommands.list_pipelines_cmd import list_pipelines
-from .subcommands.run_cmd import rerun_pipeline, run_pipeline2
+from .subcommands.run_cmd import rerun_pipeline2, run_pipeline2
 from .subcommands.summarize_cmd import summarize_command
 
 
@@ -149,7 +149,7 @@ def main(pipelines: list[PipelineSpec]):
             list_pipelines(create_registry)
 
         elif args.command == "rerun":
-            rerun_pipeline(create_registry, args)
+            rerun_pipeline2(pipeline_specs, args)
 
         # elif args.command == "run":
         #     run_pipeline(create_registry, args)

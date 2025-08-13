@@ -85,7 +85,7 @@
       "name": "rerun",
       "type": "debugpy",
       "request": "launch",
-      "program": "samples/simple/simple.py",
+      "program": "samples2/calc/calc.py",
       "console": "integratedTerminal",
       "args": [
         "rerun",
