@@ -1,6 +1,8 @@
 - uuid: 1231c4df-bba6-42cd-a3ae-24f31d5503fa
   keywords:
-    - numbers
+    - add
+    - remove
+    - multi-step
   cart:
     items: []
   turns:

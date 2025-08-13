@@ -66,14 +66,15 @@ def format(
                     else:
                         console.print()
                     if turn_result["succeeded"]:
-                        cost = turn_result["stages"][
-                            "assess"
-                        ]  # TODO: configurable - use passed predicate
-                        if cost == 0:
+                        passed = spec.passed_predicate(result)
+                        # cost = turn_result["stages"][
+                        #     "assess"
+                        # ]  # TODO: configurable - use passed predicate
+                        if passed:
                             console.print(f"### Turn {index + 1}: **PASSED**  ")
                         else:
                             console.print(
-                                f"### Turn {index + 1}: **FAILED:** cost={cost}  "
+                                f"### Turn {index + 1}: **FAILED:** cost=TODO  "
                             )
                         console.print()
 
@@ -115,7 +116,7 @@ def format(
                             console.print(formatter_spec.after_turn(turn_result))
 
                         # TODO: configurable
-                        if cost > 0:
+                        if passed:
                             console.print(f"**expected {turn_result["case"]["answer"]}:**")
                             # console.print("**Repairs:**")
                             # for step in turn_result["stages"]["assess"]["steps"]:

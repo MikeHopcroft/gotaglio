@@ -1,10 +1,26 @@
 # TODO
 
+* Finish up formatter
+* Jupyter notebooks
+* Expand/collapse prompt
+
+<details>
+<summary>Click to expand</summary>
+
+This content is initially hidden and will be revealed when the user clicks on the summary.
+</details>
+
+~~~
+python samples2\restaurant\restaurant.py run restaurant samples2\restaurant\data\cases.yaml prepare.template=samples2\restaurant\data\template.txt infer.model.name=perfect
+
+python samples2\restaurant\restaurant.py summarize latest
+~~~
+
 * Today
   * Handle missing optional PipelineSpec parts (e.g. mappings)
-  * Perhaps TurnMappingSpec becomes MappingSpec with optional `turns` path
-  * USe spec.mappings.turns
-  * perfect and flakey model parameterized by turns spec
+  * x Perhaps TurnMappingSpec becomes MappingSpec with optional `turns` path
+  * x Use spec.mappings.turns
+  * x perfect and flakey model parameterized by turns spec
   * Translate gotag.py
   * Code duplication: traceback.format_exc()?
   * x Rename run.py to run_command.py and etc.

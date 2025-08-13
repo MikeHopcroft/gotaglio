@@ -3,6 +3,7 @@ import json
 from .models import Model
 from .pipeline_spec import MappingSpec
 
+
 class Flakey(Model):
     """
     A mock model class that cycles through
@@ -19,7 +20,7 @@ class Flakey(Model):
     async def infer(self, messages, result=None):
         self._counter += 1
         if self._counter % 3 == 0:
-            return f'{result["case"][self._mappings.expected]}'
+            return expected(self._mappings, result)
         elif self._counter % 3 == 1:
             return "hello world"
         else:
@@ -27,6 +28,7 @@ class Flakey(Model):
 
     def metadata(self):
         return {}
+
 
 class Perfect(Model):
     """
@@ -39,13 +41,18 @@ class Perfect(Model):
         self._mappings = mappings
 
     async def infer(self, messages, result=None):
-        # TODO: need to JSON serialize for non-strings
-        value = result["case"][self._mappings.expected]
-        if isinstance(value, str):
-            return value
-        else:
-            return json.dumps(value, ensure_ascii=False)
-        # return f'{result["case"][self._mappings.expected]}'
+        return expected(self._mappings, result)
 
     def metadata(self):
         return {}
+
+
+def expected(mappings, result):
+    return to_llm_string(result["case"][mappings.expected])
+
+
+def to_llm_string(value):
+    # The value is pulled from the test case expected field,
+    # so it might be an object that must first be serialized
+    # to a string, to appear as an LLM completion.
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
