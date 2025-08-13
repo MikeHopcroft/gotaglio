@@ -8,15 +8,15 @@
   * x All cases say failed
 
 ~~~
-python samples2\restaurant\restaurant.py run restaurant samples2\restaurant\data\cases.yaml prepare.template=samples2\restaurant\data\template.txt infer.model.name=perfect
+python samples2\menu\menu.py run menu samples2\menu\data\cases.yaml prepare.template=samples2\menu\data\template.txt infer.model.name=perfect
 
 734 - failing
 618 - passing
 
-python samples2\restaurant\restaurant.py summarize latest
+python samples2\menu\menu.py summarize latest
 
 
-python samples2\simple\simple.py run calculator samples2\simple\data\cases.yaml prepare.template=samples2\simple\data\template.txt infer.model.name=perfect
+python samples2\calc\calc.py run calc samples2\calc\data\cases.yaml prepare.template=samples2\calc\data\template.txt infer.model.name=perfect
 
 ~~~
 

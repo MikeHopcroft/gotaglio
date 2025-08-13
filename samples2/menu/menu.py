@@ -1,7 +1,10 @@
 from glom import glom
+import json
 import os
+from rich.console import Console
 from rich.text import Text
 import sys
+from typing import Any
 
 # Add the parent directory to the sys.path so that we can import from the
 # gotaglio package, as if it had been installed.
@@ -9,16 +12,20 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from gotaglio.dag import build_dag_from_linear
 from gotaglio.exceptions import ExceptionContext
+from gotaglio.format import format_messages
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
+    FormatterSpec,
     MappingSpec,
     PipelineSpec,
     SummarizerSpec,
 )
 from gotaglio.pipeline2 import Internal, Prompt
-from gotaglio.shared import build_template
+from gotaglio.repair import Repair
+from gotaglio.shared import build_template, to_json_string
 from gotaglio.summarize import keywords_column
+from gotaglio.tokenizer import tokenizer
 
 
 ###############################################################################
@@ -96,12 +103,23 @@ def stages(name, config, registry):
     # Note that this method will raise an exception if the response is not
     # a number.
     async def extract(context):
-        with ExceptionContext(f"Extracting numerical answer from LLM response."):
-            return float(context["stages"]["infer"])
+        with ExceptionContext(f"Extracting JSON from LLM response."):
+            text = context["stages"]["infer"]
+
+            # Strip off fenced code block markers, if present.
+            marker = "```json\n"
+            if text.startswith(marker):
+                text = text[len(marker) :]
+            text = text.strip("```")
+            return json.loads(text)
 
     # Stage 4: Compare the model response to the expected answer.
     async def assess(context):
-        return context["stages"]["extract"] - context["case"]["answer"]
+        repair = Repair("id", "options", [], ["name"], "name")
+        repair.resetIds()
+        observed = repair.addIds(context["stages"]["extract"]["items"])
+        expected = repair.addIds(context["case"]["expected"]["items"])
+        return repair.diff(observed, expected)
 
     # Define the pipeline
     # The dictionary keys supply the names of the stages that make up the
@@ -126,8 +144,6 @@ def stages(name, config, registry):
 # Summarizer extensions
 #
 ###############################################################################
-
-
 def passed_predicate(result):
     """
     Predicate function to determine if the result is considered passing.
@@ -136,7 +152,7 @@ def passed_predicate(result):
 
     Used by the `format` and `summarize` sub-commands.
     """
-    return glom(result, "stages.assess", default=None) == 0
+    return glom(result, "stages.assess.cost", default=None) == 0
 
 
 def cost_cell(result, turn_index):
@@ -145,7 +161,7 @@ def cost_cell(result, turn_index):
     Provides contents and formatting for the cost cell for the summary table.
     The cost is the difference between the model's response and the expected answer.
     """
-    cost = glom(result, f"stages.assess", default=None)
+    cost = glom(result, f"stages.turns.{turn_index}.stages.assess.cost", default=None)
     cost_text = "" if cost == None else f"{cost:.2f}"
     return (
         Text(cost_text, style="bold green")
@@ -157,18 +173,64 @@ def cost_cell(result, turn_index):
 def user_cell(result, turn_index):
     """
     For user-defined `user` column in the summary report table.
-    Provides contents and for the user cell in the summary table.
+    Provides contents and formatting for the user cell in the summary table.
     This cell displays the user input for the specified turn index.
     """
-    return result["case"]["user"]
+    return result["case"]["turns"][turn_index]["user"]
 
 
-simple_pipeline_spec = PipelineSpec(
+###############################################################################
+#
+# Formatter extensions
+#
+###############################################################################
+def format_turn(console: Console, turn_index, turn_result: dict[str, Any]):
+    passed = passed_predicate(turn_result)
+    if passed:
+        console.print(f"### Turn {turn_index + 1}: **PASSED**  ")
+    else:
+        cost = glom(turn_result, "stages.assess.cost", default=None)
+        console.print(f"### Turn {turn_index + 1}: **FAILED:** (cost={cost})  ")
+    console.print()
+
+    input_tokens = sum(
+        len(tokenizer.encode(message["content"]))
+        for message in turn_result["stages"]["prepare"]
+    )
+    console.print(
+        f"Input tokens: {input_tokens}, output tokens: {len(tokenizer.encode(turn_result['stages']['infer']))}  \n"
+    )
+
+    format_messages(console, turn_result["stages"]["prepare"], collapse=["system"])
+    console.print("**assistant:**")
+    console.print("```json")
+    console.print(to_json_string(turn_result["stages"]["extract"]))
+    console.print("```")
+    console.print()
+
+    if passed:
+        console.print("**No repairs**")
+    else:
+        console.print("**expected:**")
+        console.print("```json")
+        console.print(to_json_string(turn_result["case"]["expected"]))
+        console.print("```")
+        console.print("**Repairs:**")
+        for step in turn_result["stages"]["assess"]["steps"]:
+            console.print(f"* {step}")
+
+
+###############################################################################
+#
+# Pipeline specification
+#
+###############################################################################
+menu_pipeline_spec = PipelineSpec(
     # Pipeline name used in `gotag run <pipeline>.`
-    name="calculator",
+    name="menu",
     #
     # Pipeline description shown by `gotag pipelines.`
-    description="A simple calculator pipeline",
+    description="A multi-turn menu ordering pipeline",
     #
     # Default configuration values for each pipeline stage.
     # The structure and interpretation of each configuration dict is
@@ -207,6 +269,11 @@ simple_pipeline_spec = PipelineSpec(
     },
     # Defines the directed acyclic graph (DAG) of stage functions.
     create_dag=stages,
+    # Optional FormatterSpec used by the `format` commend to display a rich
+    # transcript of the case.
+    formatter=FormatterSpec(
+        format_turn=format_turn,
+    ),
     # Optional predicate determines whether a case is considered passing.
     # Used by the `format` and `summarize` sub-commands.
     passed_predicate=passed_predicate,
@@ -220,16 +287,17 @@ simple_pipeline_spec = PipelineSpec(
         ]
     ),
     mappings=MappingSpec(
-        initial="value",
-        expected="answer",
+        turns="turns",
+        initial="cart",
+        expected="expected",
         observed="extract",
-        user="user",
+        user="query",
     ),
 )
 
 
 def go():
-    main([simple_pipeline_spec])
+    main([menu_pipeline_spec])
 
 
 if __name__ == "__main__":
