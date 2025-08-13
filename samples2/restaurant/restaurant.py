@@ -109,7 +109,7 @@ def stages(name, config, registry):
         repair = Repair("id", "options", [], ["name"], "name")
         repair.resetIds()
         observed = repair.addIds(context["stages"]["extract"]["items"])
-        expected = repair.addIds(context["case"]["turns"][-1]["expected"]["items"])
+        expected = repair.addIds(context["case"]["expected"]["items"])
         return repair.diff(observed, expected)
 
     # Define the pipeline
@@ -151,7 +151,7 @@ def user_cell(result, turn_index):
     Provides contents and for the user cell in the summary table.
     This cell displays the user input for the specified turn index.
     """
-    return result["case"]["user"]
+    return result["case"]["turns"][turn_index]["user"]
 
 
 def predicate(result):
