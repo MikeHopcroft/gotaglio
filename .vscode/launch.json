@@ -17,7 +17,7 @@
       "name": "format",
       "type": "debugpy",
       "request": "launch",
-      "program": "samples2/restaurant/restaurant.py",
+      "program": "samples2/simple/simple.py",
       "console": "integratedTerminal",
       "args": [
         "format",

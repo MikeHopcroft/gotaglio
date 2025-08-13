@@ -2,11 +2,22 @@
 
 * Finish up formatter
 * Jupyter notebooks
+* x Calculator formatting
+  * x JSON fenced code block - remove
+  * x Auto expand/collapse heuristic
+  * x All cases say failed
 
 ~~~
 python samples2\restaurant\restaurant.py run restaurant samples2\restaurant\data\cases.yaml prepare.template=samples2\restaurant\data\template.txt infer.model.name=perfect
 
+734 - failing
+618 - passing
+
 python samples2\restaurant\restaurant.py summarize latest
+
+
+python samples2\simple\simple.py run calculator samples2\simple\data\cases.yaml prepare.template=samples2\simple\data\template.txt infer.model.name=perfect
+
 ~~~
 
 * Today

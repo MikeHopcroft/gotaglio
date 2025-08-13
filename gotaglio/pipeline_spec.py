@@ -3,7 +3,6 @@ from rich.console import Console
 from typing import Any, Callable
 
 
-
 class FormatterSpec(BaseModel):
     before_case: Callable[[Console, dict[str, Any]], None] = Field(
         default=None, description="Function to generate contents before each case"
@@ -12,12 +11,7 @@ class FormatterSpec(BaseModel):
         default=None, description="Function to generate contents after each case"
     )
     format_turn: Callable[[Console, int, dict[str, Any]], None] = Field(
-        default=None, description="Function to generate contents for each turn")
-    before_turn: Callable[[dict[str, Any]], None] = Field(
-        default=None, description="Function to generate contents before each case"
-    )
-    after_turn: Callable[[dict[str, Any]], None] = Field(
-        default=None, description="Function to generate contents after each case"
+        default=None, description="Function to generate contents for each turn"
     )
 
 
@@ -79,13 +73,17 @@ class PipelineSpec(BaseModel):
     summarizer: SummarizerSpec | Callable = Field(
         default=None, description="Optional summarizer spec or function"
     )
-    mappings: MappingSpec = Field(default=None, description="Optional turns configuration")
+    mappings: MappingSpec = Field(
+        default=None, description="Optional turns configuration"
+    )
     # TODO: Compare
+
 
 class PipelineSpecs:
     """
     Registry for PipelineSpec objects.
     """
+
     def __init__(self, pipelines: list[PipelineSpec]):
         self.pipelines = pipelines
 

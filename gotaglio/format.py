@@ -51,18 +51,28 @@ def format(
                     if using_turns
                     else ""
                 )
-                console.print(
-                    f"## Case: {short_id(result['case']['uuid'])}{turn_count}"
+                passed = (
+                    # When using turns, check if all turns passed
+                    all(
+                        [
+                            spec.passed_predicate(turn_result)
+                            for turn_result in glom(result, "stages.turns", default=[])
+                        ]
+                    )
+                    if using_turns
+                    else spec.passed_predicate(result)
                 )
+
+                console.print(
+                    f"## Case: {short_id(result['case']['uuid'])}{turn_count} - {"PASSED" if passed else "FAILED"}"
+                )
+                console.print(
+                    f"**Keywords:** {', '.join(glom(result, 'case.keywords', default=[]))}  "
+                )
+                console.print()
 
                 if formatter_spec.before_case:
                     formatter_spec.before_case(console, result)
-
-                # # TODO: configurable - or built in?
-                # console.print(
-                #     f"**Keywords:** {', '.join(glom(result, 'case.keywords', default=[]))}  "
-                # )
-                # console.print()
 
                 turns = result["stages"]["turns"] if using_turns else [result]
                 for index, turn_result in enumerate(turns):
@@ -80,71 +90,19 @@ def format_one_turn(spec, formatter_spec, console, index, result, turn_result):
     else:
         console.print()
     if turn_result["succeeded"]:
-        passed = spec.passed_predicate(turn_result)
-        # cost = turn_result["stages"][
-        #     "assess"
-        # ]  # TODO: configurable - use passed predicate
-        # if passed:
-        #     console.print(f"### Turn {index + 1}: **PASSED**  ")
-        # else:
-        #     console.print(f"### Turn {index + 1}: **FAILED:** (cost=TODO)  ")
-        # console.print()
-
-        if formatter_spec.before_turn:
-            console.print(formatter_spec.before_turn(turn_result))
-        # # TODO: configurable
-        # input_tokens = sum(
-        #     len(tokenizer.encode(message["content"]))
-        #     for message in turn_result["stages"][
-        #         "prepare"
-        #     ]  # TODO: configurable ["messages"]
-        # )
-        # console.print(f"Complete menu tokens: {complete_tokens}  ")
-        # console.print(
-        #     f"Input tokens: {input_tokens}, output tokens: {len(tokenizer.encode(turn_result['stages']['infer']))}"
-        # )
-        console.print()
-
         if formatter_spec.format_turn:
             formatter_spec.format_turn(console, index, turn_result)
         else:
-            format_messages(console, turn_result["stages"]["prepare"], collapse=["system"])
-            # for x in turn_result["stages"]["prepare"]:  # TODO: configurable ["messages"]
-            #     if x["role"] == "assistant" or x["role"] == "system":  # TODO: configurable
-            #         console.print(f"**{x['role']}:**")
-            #         if x["role"] == "system":
-            #             console.print("<details>\n<summary>Click to expand</summary>\n")
-            #         console.print("```json")
-            #         console.print(x["content"])
-            #         console.print("```")
-            #         if x["role"] == "system":
-            #             console.print("\n</details>\n&nbsp;  \n")
-            #     elif x["role"] == "user":
-            #         console.print(f"**{x['role']}:** _{x['content']}_")
-            #     console.print()
+            format_messages(
+                console, turn_result["stages"]["prepare"], collapse=["system"]
+            )
             console.print(f"**assistant:**")
-            console.print("```json")
-            console.print(to_json_string(turn_result["stages"]["extract"]))
-            console.print("```")
+            format_response(
+                console, turn_result["stages"]["extract"]
+            )
             console.print()
 
-        if formatter_spec.after_turn:
-            console.print(formatter_spec.after_turn(turn_result))
-
-        # TODO: configurable
-        # if passed:
-        #     console.print(f"**expected {turn_result["case"]["answer"]}:**")
-        #     # console.print("**Repairs:**")
-        #     # for step in turn_result["stages"]["assess"]["steps"]:
-        #     #     console.print(f"* {step}")
-        # # else:
-        # #     console.print("**No repairs**")
-
         console.print()
-        # console.print("**Pruning query**:")
-        # for x in turn_result["stages"]["prepare"]["full_query"]:
-        #     console.print(f"* {x}")
-        # console.print()
     else:
         console.print(f"### Turn {index + 1}: **ERROR**  ")
         console.print(f"Error: {turn_result['exception']['message']}")
@@ -162,14 +120,24 @@ def format_messages(console, messages, collapse: list[str] | None = None):
     for x in messages:
         if x["role"] == "assistant" or x["role"] == "system":
             console.print(f"**{x['role']}:**")
-            should_collapse = collapse and x["role"] in collapse
+            should_collapse = collapse and x["role"] in collapse and large_text_heuristic(x["content"])
             if should_collapse:
                 console.print("<details>\n<summary>Click to expand</summary>\n")
-            console.print("```json")
-            console.print(x["content"])
-            console.print("```")
+            format_response(console, x["content"])
             if should_collapse:
                 console.print("\n</details>\n&nbsp;  \n")
         elif x["role"] == "user":
             console.print(f"**{x['role']}:** _{x['content']}_")
         console.print()
+
+def format_response(console, value):
+    if isinstance(value, dict):
+        console.print("```json")
+        console.print(x["content"])
+        console.print("```")
+    else:
+        console.print(str(value))
+
+def large_text_heuristic(text: str) -> bool:
+    return len(text.splitlines()) > 20 or len(text) > 200
+

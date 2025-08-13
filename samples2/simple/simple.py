@@ -12,7 +12,7 @@ from gotaglio.exceptions import ExceptionContext
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
-    FormatterSpec,
+    MappingSpec,
     PipelineSpec,
     SummarizerSpec,
 )
@@ -21,6 +21,11 @@ from gotaglio.shared import build_template
 from gotaglio.summarize import keywords_column
 
 
+###############################################################################
+#
+# Stage Functions
+#
+###############################################################################
 def stages(name, config, registry):
     """
     Defines the structure of a simple, linear pipeline with four stages:
@@ -116,6 +121,24 @@ def stages(name, config, registry):
     return build_dag_from_linear(stages)
 
 
+###############################################################################
+#
+# Summarizer extensions
+#
+###############################################################################
+
+
+def passed_predicate(result):
+    """
+    Predicate function to determine if the result is considered passing.
+    This checks if the assessment stage's result is zero, indicating
+    that the LLM response matches the expected answer.
+
+    Used by the `format` and `summarize` sub-commands.
+    """
+    return glom(result, "stages.assess", default=None) == 0
+
+
 def cost_cell(result, turn_index):
     """
     For user-defined `cost` column in the summary report table.
@@ -138,17 +161,6 @@ def user_cell(result, turn_index):
     This cell displays the user input for the specified turn index.
     """
     return result["case"]["user"]
-
-
-def predicate(result):
-    """
-    Predicate function to determine if the result is considered passing.
-    This checks if the assessment stage's result is zero, indicating
-    that the LLM response matches the expected answer.
-
-    Used by the `format` and `summarize` sub-commands.
-    """
-    return glom(result, "stages.assess", default=1) == 0
 
 
 simple_pipeline_spec = PipelineSpec(
@@ -195,21 +207,9 @@ simple_pipeline_spec = PipelineSpec(
     },
     # Defines the directed acyclic graph (DAG) of stage functions.
     create_dag=stages,
-    # Optional FormatterSpec used by the `format` commend to display a rich
-    # transcript of the case.
-    formatter=FormatterSpec(
-        before_case=lambda case: Text(f"Formatting case: {case['case']['uuid']}"),
-        after_case=lambda case: Text(
-            f"Finished formatting case: {case['case']['uuid']}"
-        ),
-        before_turn=lambda case: Text(f"Formatting turn: {case['case']['user']}"),
-        after_turn=lambda case: Text(
-            f"Finished formatting turn: {case['case']['user']}"
-        ),
-    ),
     # Optional predicate determines whether a case is considered passing.
     # Used by the `format` and `summarize` sub-commands.
-    passed_predicate=lambda result: glom(result, "stages.assess", default=1) == 0,
+    passed_predicate=passed_predicate,
     # Optional SummarizerSpec used by the `summarize` command to
     # summarize the results of the run.
     summarizer=SummarizerSpec(
@@ -219,9 +219,12 @@ simple_pipeline_spec = PipelineSpec(
             ColumnSpec(name="user", contents=user_cell),
         ]
     ),
-    # turns=MappingSpec(
-    #     initial="value", expected="answer", observed="extract", user="user"
-    # ),
+    mappings=MappingSpec(
+        initial="value",
+        expected="answer",
+        observed="extract",
+        user="user",
+    ),
 )
 
 
