@@ -1,18 +1,19 @@
 # TODO
 
-* x Ensure sample cases have unique uuids - not copied from one another
+* Update documentation
+* TODO: consider creating full conversation history for all preceding turns. Will need to somehow pass in the entire context and a turn index.
+* Is it ok for config merge to add new keys that didn't exist before? What about typos?
 * Design note about coercing types of a=b command line parameters.
   * It seems like argparse can't help here as it doesn't know about the type.
   * Perhaps pydantic can help. It might also help with invalid keys.
-* Is it ok for config merge to add new keys that didn't exist before? What about typos?
+* x Better name for format_case. Code reuse?
+* x Compare
+* x Ensure sample cases have unique uuids - not copied from one another
 * x Does director need format() and summarize()?
 * x Is there any reason format() and summarize() can't create their own consoles?
-* Compare
-* Finish up formatter
-* Update documentation
+* x Finish up formatter
 * x Dag sample
 * . Overarching main() for all samples
-* TODO: consider creating full conversation history for all preceding turns. Will need to somehow pass in the entire context and a turn index.
 * x Jupyter notebooks
 * x Calculator formatting
   * x JSON fenced code block - remove
@@ -30,6 +31,8 @@ python samples2\menu\menu.py summarize latest
 
 python samples2\calc\calc.py run calc samples2\calc\data\cases.yaml prepare.template=samples2\calc\data\template.txt infer.model.name=perfect
 
+45f b90
+python samples2\calc\calc.py compare 45f b90
 ~~~
 
 * Today

@@ -9,16 +9,13 @@ import uuid
 from .constants import app_configuration
 from .dag import run_dag
 from .exceptions import ExceptionContext
-from .format import format
 from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener
-from .make_console import MakeConsole
 from .models import register_models
 from .pipeline2 import Pipeline2
 from .pipeline_spec import PipelineSpec
 from .registry import Registry
 from .shared import write_json_file
-from .summarize import summarize
 
 
 class Director2:
@@ -26,7 +23,7 @@ class Director2:
         self,
         pipeline_spec: PipelineSpec,
         cases: List[dict[str, Any]],
-        replacement_config: dict[str, Any]  | None,
+        replacement_config: dict[str, Any] | None,
         flat_config_patch: dict[str, Any],
         max_concurrency: int,
     ):
@@ -117,7 +114,7 @@ class Director2:
 
         print(f"Results written to {self._output_file}")
         return {"log": self._output_file, "results": self._results}
-    
+
     def diff_configs(self):
         return self._pipeline.diff_configs()
 

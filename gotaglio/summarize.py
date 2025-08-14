@@ -1,7 +1,7 @@
 from glom import glom
 from rich.table import Table
 from rich.text import Text
-from typing import Any, Callable
+from typing import Any
 
 from .helpers import IdShortener
 from .make_console import MakeConsole
@@ -126,11 +126,6 @@ class Summarizer:
 
     def render_one_row(self, table, columns, result, turn_index, turn_result):
         succeeded = turn_result["succeeded"]
-        # TODO: reinstate the cost calculation logic.
-        #   cost = (
-        #       turn_result["stages"]["assess"] if succeeded else None # TODO: configurable
-        #   )
-        # cost = turn_index % 2  # Dummy cost for demonstration purposes
         passed = self._passed_predicate(turn_result)
 
         self.total_count += 1

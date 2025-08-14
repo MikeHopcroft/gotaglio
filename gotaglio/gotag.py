@@ -3,6 +3,7 @@ import nest_asyncio
 from typing import Any
 import uuid
 
+from .compare import compare
 from .constants import app_configuration_values
 from .director2 import Director2
 from .format import format
@@ -38,8 +39,7 @@ class Gotaglio:
     def compare(self, a, b):
         runlog_a = runlog_from_runlog_or_prefix(a)
         runlog_b = runlog_from_runlog_or_prefix(b)
-        registry = self._registry_factory()
-        registry.compare(runlog_a, runlog_b)
+        compare(self._pipeline_specs, runlog_a, runlog_b)
 
     def format(self, runlog_or_prefix, case_uuid_prefix=None):
         runlog = runlog_from_runlog_or_prefix(runlog_or_prefix)
