@@ -30,6 +30,49 @@ from gotaglio.tokenizer import tokenizer
 
 ###############################################################################
 #
+# Default Configuration Values
+#
+###############################################################################
+
+# Default configuration values for each pipeline stage.
+# The structure and interpretation of each configuration dict is
+# dictated by the needs of corresponding pipeline stages.
+#
+# An instance of `Prompt` indicates that the value must be provided on
+# the command line. In this case, the user would need to provide values
+# for the following keys on the command line:
+#   - prepare.template
+#   - infer.model.name
+#
+# An instance of `Internal` indicates that the value is provided by the
+# pipeline runtime. Using a value of `Internal` will prevent the
+# corresponding key from being displayed in help messages.
+#
+# There is no requirement to define a configuration dict for each stage.
+# It is the implementation of the pipeline that determines which stages
+# require configuration dicts.
+configuration = {
+    "prepare": {
+        "template": Prompt("Template file for system message"),
+        "template_text": Internal(),
+    },
+    "infer": {
+        "model": {
+            "name": Prompt("Model name to use for inference stage"),
+            "settings": {
+                "max_tokens": 800,
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "frequency_penalty": 0,
+                "presence_penalty": 0,
+            },
+        }
+    },
+}
+
+
+###############################################################################
+#
 # Stage Functions
 #
 ###############################################################################
@@ -231,42 +274,8 @@ menu_pipeline_spec = PipelineSpec(
     #
     # Pipeline description shown by `gotag pipelines.`
     description="A multi-turn menu ordering pipeline",
-    #
-    # Default configuration values for each pipeline stage.
-    # The structure and interpretation of each configuration dict is
-    # dictated by the needs of corresponding pipeline stages.
-    #
-    # An instance of `Prompt` indicates that the value must be provided on
-    # the command line. In this case, the user would need to provide values
-    # for the following keys on the command line:
-    #   - prepare.template
-    #   - infer.model.name
-    #
-    # An instance of `Internal` indicates that the value is provided by the
-    # pipeline runtime. Using a value of `Internal` will prevent the
-    # corresponding key from being displayed in help messages.
-    #
-    # There is no requirement to define a configuration dict for each stage.
-    # It is the implementation of the pipeline that determines which stages
-    # require configuration dicts.
-    configuration={
-        "prepare": {
-            "template": Prompt("Template file for system message"),
-            "template_text": Internal(),
-        },
-        "infer": {
-            "model": {
-                "name": Prompt("Model name to use for inference stage"),
-                "settings": {
-                    "max_tokens": 800,
-                    "temperature": 0.7,
-                    "top_p": 0.95,
-                    "frequency_penalty": 0,
-                    "presence_penalty": 0,
-                },
-            }
-        },
-    },
+    # Default configuration values for use by pipeline stages.
+    configuration=configuration,
     # Defines the directed acyclic graph (DAG) of stage functions.
     create_dag=stages,
     # Optional FormatterSpec used by the `format` commend to display a rich

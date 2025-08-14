@@ -1,8 +1,12 @@
 # TODO
 
 * Does director need format() and summarize()?
+* Is there any reason format() and summarize() can't create their own consoles?
+* Compare
 * Finish up formatter
-* Jupyter notebooks
+* Dag sample
+* Overarching main() for all samples
+* x Jupyter notebooks
 * x Calculator formatting
   * x JSON fenced code block - remove
   * x Auto expand/collapse heuristic
