@@ -1,14 +1,14 @@
 # TODO
 
 * keyword filtering
-* Investigate process_one_case() implementation differences
-  * director - what is "result["turn"] = turn"?
 * Update documentation
 * TODO: consider creating full conversation history for all preceding turns. Will need to somehow pass in the entire context and a turn index.
 * Is it ok for config merge to add new keys that didn't exist before? What about typos?
 * Design note about coercing types of a=b command line parameters.
   * It seems like argparse can't help here as it doesn't know about the type.
   * Perhaps pydantic can help. It might also help with invalid keys.
+* x Investigate process_one_case() implementation differences
+  * x director - what is "result["turn"] = turn"?
 * x Better name for format_case. Code reuse?
 * x Compare
 * x Ensure sample cases have unique uuids - not copied from one another

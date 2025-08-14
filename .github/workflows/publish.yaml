@@ -1,0 +1,95 @@
+name: Publish to PyPI with Poetry
+
+on:
+  release:
+    types: [published]
+  # Optionally allow manual triggering for testing
+  workflow_dispatch:
+
+permissions:
+  id-token: write  # IMPORTANT: mandatory for trusted publishing
+  contents: read   # to checkout the repository
+
+jobs:
+  publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/${{ github.event.repository.name }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'  # or your preferred Python version
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Install project
+      run: poetry install --no-interaction
+
+    - name: Run tests (optional)
+      run: |
+        poetry run pytest
+      # Remove this step if you don't have tests or handle testing in a separate workflow
+
+    - name: Verify version matches tag
+      run: |
+        # Extract version from pyproject.toml
+        POETRY_VERSION=$(poetry version --short)
+        # Extract tag version (remove 'v' prefix if present)
+        TAG_VERSION=${GITHUB_REF_NAME#v}
+        echo "Poetry version: $POETRY_VERSION"
+        echo "Tag version: $TAG_VERSION"
+        if [ "$POETRY_VERSION" != "$TAG_VERSION" ]; then
+          echo "Version mismatch! Poetry version ($POETRY_VERSION) doesn't match tag ($TAG_VERSION)"
+          exit 1
+        fi
+
+    - name: Build package
+      run: poetry build
+
+    - name: Publish to TestPyPI (for testing)
+      if: github.event_name == 'workflow_dispatch'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        # Poetry builds to dist/ by default
+        packages-dir: dist/
+        # No password or api-token needed with trusted publishing!
+    
+    - name: Publish to PyPI (for releases)
+      if: github.event_name == 'release'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        # Poetry builds to dist/ by default
+        packages-dir: dist/
+        # No password or api-token needed with trusted publishing!
+        
+    # - name: Publish to PyPI
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     # Poetry builds to dist/ by default
+    #     packages-dir: dist/
+    #     # No password or api-token needed with trusted publishing!
