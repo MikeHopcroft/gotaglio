@@ -143,10 +143,10 @@ def main(pipelines: list[PipelineSpec]):
             show_history()
 
         elif args.command == "models":
-            list_models(create_registry)
+            list_models()
 
         elif args.command == "pipelines":
-            list_pipelines(create_registry)
+            list_pipelines(pipeline_specs)
 
         elif args.command == "rerun":
             rerun_command(pipeline_specs, args)

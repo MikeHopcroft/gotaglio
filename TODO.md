@@ -1,5 +1,8 @@
 # TODO
 
+* keyword filtering
+* Investigate process_one_case() implementation differences
+  * director - what is "result["turn"] = turn"?
 * Update documentation
 * TODO: consider creating full conversation history for all preceding turns. Will need to somehow pass in the entire context and a turn index.
 * Is it ok for config merge to add new keys that didn't exist before? What about typos?

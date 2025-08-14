@@ -1,5 +1,7 @@
-def list_pipelines(registry_factory):
-    registry = registry_factory()
+from gotaglio.pipeline_spec import PipelineSpecs
+
+
+def list_pipelines(pipeline_specs: PipelineSpecs):
     print("Available pipelines:")
-    for k, v in registry._pipelines.items():
-        print(f"  {k}: {v._description}")
+    for spec in pipeline_specs:
+        print(f"  {spec.name}: {spec.description}")

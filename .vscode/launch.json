@@ -17,11 +17,21 @@
       "name": "format",
       "type": "debugpy",
       "request": "launch",
-      "program": "samples2/simple/simple.py",
+      "program": "samples2/calc/calc.py",
       "console": "integratedTerminal",
       "args": [
         "format",
         "latest",
+      ]
+    },
+    {
+      "name": "models",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "samples2/calc/calc.py",
+      "console": "integratedTerminal",
+      "args": [
+        "models"
       ]
     },
     {

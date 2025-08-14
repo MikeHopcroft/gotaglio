@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta, timezone
 from glom import glom
+import traceback
 from typing import Any
 
-from .dag import build_dag_from_spec
-from .director import process_one_case
+from .dag import build_dag_from_spec, run_dag
+# from .director2 import process_one_case
 from .exceptions import ExceptionContext
 from .mocks import Flakey, Perfect
 from .registry import Registry
@@ -158,3 +160,35 @@ def ensure_required_configs(name, default_config, config):
                 ]
                 lines.extend([f"  {k}: {v._description}" for k, v in prompts])
                 raise ValueError("\n".join(lines))
+
+
+async def process_one_case(case, dag, completed):
+    ExceptionContext.clear_context()
+    start = datetime.now().timestamp()
+    result = {
+        "succeeded": False,
+        "metadata": {"start": str(datetime.fromtimestamp(start, timezone.utc))},
+        "case": case,
+        "stages": {},
+    }
+
+    try:
+        await run_dag(dag, result)
+    except Exception as e:
+        result["exception"] = {
+            "message": ExceptionContext.format_message(e),
+            "traceback": traceback.format_exc(),
+            "time": str(datetime.now(timezone.utc)),
+        }
+        return result
+
+    end = datetime.now().timestamp()
+    if completed:
+        completed()
+    elapsed = end - start
+    result["metadata"]["end"] = str(datetime.fromtimestamp(end, timezone.utc))
+    result["metadata"]["elapsed"] = str(timedelta(seconds=elapsed))
+    result["succeeded"] = True
+    return result
+
+

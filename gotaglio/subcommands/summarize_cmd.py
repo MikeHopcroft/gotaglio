@@ -20,6 +20,6 @@ def summarize_command(pipeline_spec: PipelineSpecs, args):
     spec = pipeline_spec.get(pipeline_name)
     
     console = MakeConsole()
-    summarize(spec, console, results)
+    summarize(spec, results)
     console.render()
 

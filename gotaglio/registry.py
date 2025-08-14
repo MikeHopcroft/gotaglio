@@ -1,6 +1,5 @@
 from typing import Optional
 
-from .make_console import MakeConsole
 from .models import Model
 from .shared import format_list
 

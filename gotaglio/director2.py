@@ -12,7 +12,7 @@ from .exceptions import ExceptionContext
 from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener
 from .models import register_models
-from .pipeline2 import Pipeline2
+from .pipeline2 import Pipeline2, process_one_case
 from .pipeline_spec import PipelineSpec
 from .registry import Registry
 from .shared import write_json_file
@@ -119,34 +119,34 @@ class Director2:
         return self._pipeline.diff_configs()
 
 
-async def process_one_case(case, dag, completed):
-    ExceptionContext.clear_context()
-    start = datetime.now().timestamp()
-    result = {
-        "succeeded": False,
-        "metadata": {"start": str(datetime.fromtimestamp(start, timezone.utc))},
-        "case": case,
-        "stages": {},
-    }
+# async def process_one_case(case, dag, completed):
+#     ExceptionContext.clear_context()
+#     start = datetime.now().timestamp()
+#     result = {
+#         "succeeded": False,
+#         "metadata": {"start": str(datetime.fromtimestamp(start, timezone.utc))},
+#         "case": case,
+#         "stages": {},
+#     }
 
-    try:
-        await run_dag(dag, result)
-    except Exception as e:
-        result["exception"] = {
-            "message": ExceptionContext.format_message(e),
-            "traceback": traceback.format_exc(),
-            "time": str(datetime.now(timezone.utc)),
-        }
-        return result
+#     try:
+#         await run_dag(dag, result)
+#     except Exception as e:
+#         result["exception"] = {
+#             "message": ExceptionContext.format_message(e),
+#             "traceback": traceback.format_exc(),
+#             "time": str(datetime.now(timezone.utc)),
+#         }
+#         return result
 
-    end = datetime.now().timestamp()
-    if completed:
-        completed()
-    elapsed = end - start
-    result["metadata"]["end"] = str(datetime.fromtimestamp(end, timezone.utc))
-    result["metadata"]["elapsed"] = str(timedelta(seconds=elapsed))
-    result["succeeded"] = True
-    return result
+#     end = datetime.now().timestamp()
+#     if completed:
+#         completed()
+#     elapsed = end - start
+#     result["metadata"]["end"] = str(datetime.fromtimestamp(end, timezone.utc))
+#     result["metadata"]["elapsed"] = str(timedelta(seconds=elapsed))
+#     result["succeeded"] = True
+#     return result
 
 
 def validate_cases(cases):

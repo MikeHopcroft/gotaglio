@@ -95,3 +95,9 @@ class PipelineSpecs:
         if spec is None:
             raise ValueError(f"Cannot find pipeline '{name}'.")
         return spec
+
+    def __iter__(self):
+        return iter(self.pipelines)
+
+    def __len__(self):
+        return len(self.pipelines)
