@@ -68,6 +68,18 @@
       ]
     },
     {
+      "name": "dag",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "samples2/dag/dag.py",
+      "console": "integratedTerminal",
+      "args": [
+        "run",
+        "dag",
+        "samples2/dag/data/cases.yaml"
+      ],
+    },
+    {
       "name": "run",
       "type": "debugpy",
       "request": "launch",

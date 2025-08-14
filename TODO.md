@@ -1,11 +1,18 @@
 # TODO
 
+* x Ensure sample cases have unique uuids - not copied from one another
+* Design note about coercing types of a=b command line parameters.
+  * It seems like argparse can't help here as it doesn't know about the type.
+  * Perhaps pydantic can help. It might also help with invalid keys.
+* Is it ok for config merge to add new keys that didn't exist before? What about typos?
 * Does director need format() and summarize()?
 * Is there any reason format() and summarize() can't create their own consoles?
 * Compare
 * Finish up formatter
-* Dag sample
-* Overarching main() for all samples
+* Update documentation
+* x Dag sample
+* . Overarching main() for all samples
+* TODO: consider creating full conversation history for all preceding turns. Will need to somehow pass in the entire context and a turn index.
 * x Jupyter notebooks
 * x Calculator formatting
   * x JSON fenced code block - remove

@@ -40,7 +40,7 @@ class Pipeline2:
 
         # Create the DAG.
         turn_dag = spec.create_dag(spec.name, self._config, registry)
-        if spec.mappings.turns is not None:
+        if spec.mappings and spec.mappings.turns is not None:
             # Wrap the single-turn DAG to handle multiple turns.
             self._dag = create_turns_dag(spec.mappings, turn_dag)
         else:
