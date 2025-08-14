@@ -108,18 +108,6 @@ class Director2:
                 progress.stop()
             return self._results
 
-    # DESIGN NOTE: format_results(), summarize_results(), and write_results()
-    # members exist because caller doesn't have the Pipeline instance.
-    def format(self, uuid_prefix=None):
-        console = MakeConsole()
-        format(self._spec, console, self._results, uuid_prefix)
-        console.render()
-
-    def summarize(self):
-        console = MakeConsole()
-        summarize(self._spec, console, self._results)
-        console.render()
-
     def write(self):
         # Write results to log file
         log_folder = app_configuration["log_folder"]

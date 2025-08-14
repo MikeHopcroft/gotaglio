@@ -5,6 +5,38 @@ from rich.text import Text
 
 class MakeConsole:
     """
+    The MakeConsole class is a wrapper around the rich console library that provides intelligent output rendering based on the execution context. Here's what it does:
+
+    **Primary Purpose:**
+    It creates a console that can automatically detect whether code is running in a Jupyter notebook or a terminal and renders output appropriately for each environment.
+
+    **Key Features:**
+    1. Context-Aware Rendering
+    In Jupyter notebooks: Uses IPython's display() module to show output in a single output cell
+    In terminals: Uses rich console with ANSI escape sequences for colored/formatted output
+    In non-interactive contexts (like file redirection): Strips ANSI codes and outputs plain text
+    2. Content Type Support
+    Supports three content types:
+        * text/plain: Plain text with ANSI escape sequences
+        * text/html: HTML output
+        * text/markdown: Markdown output
+    
+    3. Output Consolidation
+    In Jupyter notebooks, it consolidates multiple print statements into a single output cell instead of creating separate output sub-cells for each print.
+
+
+    ## Design Rationale
+
+    The class addresses several pain points:
+
+    1. Jupyter notebook fragmentation: Normally each print() creates a new output cell, but this consolidates them
+    2. Environment detection: Automatically adapts to whether you're in a notebook or terminal
+    3. Format flexibility: Allows specifying output format (plain text, HTML, markdown)
+    4. ANSI handling: Intelligently handles ANSI escape sequences based on context
+    This is particularly useful for library code that needs to work well in both interactive notebooks and command-line environments, providing a consistent and optimal user experience in each context.
+    """
+
+    """
     The MakeConsole class configures a `rich` console object that records
     all output. The MakeConsole.render() method detects whether the code
     is running in a Jupyter notebook or terminal and renders the output
@@ -57,10 +89,15 @@ class MakeConsole:
             - text/html: HTML output
             - text/markdown: Markdown output
         """
+        supported_types = {"text/plain", "text/html", "text/markdown"}
+        if content_type not in supported_types:
+            raise ValueError(f"Unsupported content_type: {content_type}")
+
         if self._console:
             raise Exception(
                 "Console already created. Call render() to show the output."
             )
+
         self._content_type = content_type
         self._console = Console(force_terminal=True)
         self._console.begin_capture()

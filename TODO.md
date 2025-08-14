@@ -5,8 +5,8 @@
   * It seems like argparse can't help here as it doesn't know about the type.
   * Perhaps pydantic can help. It might also help with invalid keys.
 * Is it ok for config merge to add new keys that didn't exist before? What about typos?
-* Does director need format() and summarize()?
-* Is there any reason format() and summarize() can't create their own consoles?
+* x Does director need format() and summarize()?
+* x Is there any reason format() and summarize() can't create their own consoles?
 * Compare
 * Finish up formatter
 * Update documentation

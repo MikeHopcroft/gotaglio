@@ -1,7 +1,7 @@
 from glom import glom
-from typing import Callable
 
 from .helpers import IdShortener
+from .make_console import MakeConsole
 from .pipeline_spec import PipelineSpec
 from .shared import to_json_string
 from .tokenizer import tokenizer
@@ -11,11 +11,11 @@ from .tokenizer import tokenizer
 # uuid_prefix. Otherwise, format all cases.
 def format(
     spec: PipelineSpec,
-    make_console: Callable,
     runlog: dict[str, any],
     uuid_prefix: str | None = None,
 ) -> None:
-    console = make_console("text/markdown")
+    console_buffer = MakeConsole()
+    console = console_buffer("text/markdown")
     if callable(spec.formatter):
         spec.formatter(console, runlog)
     else:
@@ -82,7 +82,7 @@ def format(
 
                 if formatter_spec and formatter_spec.after_case:
                     console.print(formatter_spec.after_case(result))
-
+    console_buffer.render()
 
 def format_one_turn(spec, formatter_spec, console, index, result, turn_result):
     if index > 0:

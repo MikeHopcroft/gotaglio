@@ -4,21 +4,22 @@ from rich.text import Text
 from typing import Any, Callable
 
 from .helpers import IdShortener
+from .make_console import MakeConsole
 from .pipeline_spec import PipelineSpec, column_spec
 
 
 def summarize(
     spec: PipelineSpec,
-    make_console: Callable,
     runlog: dict[str, Any],
 ):
-    console = make_console("text/plain")
+    console_buffer = MakeConsole()
+    console = console_buffer("text/plain")
     if callable(spec.summarizer):
         spec.summarizer(console, runlog)
     else:
         s = Summarizer(spec)
         s.summarize(console, runlog)
-
+    console_buffer.render()
 
 class Summarizer:
     def __init__(

@@ -4,10 +4,8 @@ from typing import Any
 import uuid
 
 from .constants import app_configuration_values
-from .director import Director
 from .director2 import Director2
 from .format import format
-from .make_console import MakeConsole
 from .pipeline_spec import PipelineSpec, PipelineSpecs, PipelineSpecs
 from .shared import apply_patch_in_place, read_json_file, read_log_file_from_prefix
 from .summarize import summarize
@@ -48,9 +46,7 @@ class Gotaglio:
         pipeline_name = runlog["metadata"]["pipeline"]["name"]
         pipeline_spec = self._pipeline_specs.get(pipeline_name)
 
-        console = MakeConsole()
-        format(pipeline_spec, console, runlog, case_uuid_prefix)
-        console.render()
+        format(pipeline_spec, runlog, case_uuid_prefix)
 
     def load(self, uuid_prefix):
         return read_log_file_from_prefix(uuid_prefix)
@@ -75,7 +71,7 @@ class Gotaglio:
         )
 
         asyncio.run(director.process_all_cases(ProgressMock(), completed_mock))
-        director.summarize()
+        summarize(pipeline_spec, director._results)
 
         if save:
             director.write()
@@ -101,7 +97,7 @@ class Gotaglio:
         )
 
         asyncio.run(director.process_all_cases(ProgressMock(), completed_mock))
-        director.summarize()
+        summarize(pipeline_spec, director._results)
 
         if save:
             director.write()
@@ -116,9 +112,7 @@ class Gotaglio:
         runlog = runlog_from_runlog_or_prefix(runlog_or_prefix)
         pipeline_name = runlog["metadata"]["pipeline"]["name"]
         pipeline_spec = self._pipeline_specs.get(pipeline_name)
-        console = MakeConsole()
-        summarize(pipeline_spec, console, runlog)
-        console.render()
+        summarize(pipeline_spec, runlog)
 
 
 def runlog_from_runlog_or_prefix(runlog_or_prefix):

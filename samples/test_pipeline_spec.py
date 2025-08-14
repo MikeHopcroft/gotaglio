@@ -12,6 +12,7 @@ from gotaglio.dag import build_dag_from_spec
 from gotaglio.director2 import Director2
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.make_console import MakeConsole
+from gotaglio.format import format
 from gotaglio.pipeline_spec import (
     ColumnSpec,
     FormatterSpec,
@@ -22,7 +23,7 @@ from gotaglio.pipeline_spec import (
 from gotaglio.pipeline2 import Internal, Pipeline2, Prompt
 from gotaglio.registry import Registry
 from gotaglio.shared import build_template, to_json_string
-from gotaglio.summarize import keywords_column
+from gotaglio.summarize import keywords_column, summarize
 
 
 # The structure of the pipeline is defined by the stages() method.
@@ -146,15 +147,15 @@ spec = PipelineSpec(
         after_turn=lambda case: Text(f"Finished formatting turn: {case['case']['user']}"),
     ),
     passed_predicate=lambda result: glom(result, "stages.assess", default=1) == 0,
-    summarize=SummarizerSpec(
+    summarizer=SummarizerSpec(
         columns=[
             ColumnSpec(name="cost", contents=cost_cell),
             keywords_column,
             ColumnSpec(name="user", contents=user_cell),
         ]
     ),
-    turns=MappingSpec(
-        initial="value", expected="answer", observed="extract", user="user"
+    mappings=MappingSpec(
+        turns="turns", initial="value", expected="answer", observed="extract", user="user"
     ),
 )
 
@@ -195,46 +196,46 @@ def go2():
     completed = None
     asyncio.run(director.process_all_cases(progress, completed))
     director.write()
-    director.summarize()
-    director.format(uuid_prefix=None)
+    summarize(spec, director._results)
+    format(spec, director._results, uuid_prefix=None)
     print("finished")
 
 
-def go1():
-    print(spec)
+# def go1():
+#     print(spec)
 
-    registry = Registry()
-    pipeline = Pipeline2(spec, None, {"precision": 3}, registry)
-    print(pipeline)
+#     registry = Registry()
+#     pipeline = Pipeline2(spec, None, {"precision": 3}, registry)
+#     print(pipeline)
 
-    runlog = {
-        "uuid": "1234",
-        "results": [
-            {
-                "succeeded": True,
-                "case": {
-                    "uuid": "ed6ceb29-b4b9-427c-99b8-635984198a59",
-                    "keywords": ["math", "addition"],
-                    "value": 0,
-                    "turns": [
-                        {"user": "1+1", "expected": 2},
-                        {"user": "Plus 100", "expected": 102},
-                        {"user": "divide by two", "expected": 51},
-                    ],
-                },
-                "stages": {
-                    "turns": [
-                        {"succeeded": True, "stages": {"extract": 2}},
-                        {"succeeded": True, "stages": {"extract": 103}},
-                        {"succeeded": True, "stages": {"extract": 51}},
-                    ]
-                },
-            },
-        ],
-    }
-    console = MakeConsole()
-    pipeline.summarize(console, runlog)
-    console.render()
+#     runlog = {
+#         "uuid": "1234",
+#         "results": [
+#             {
+#                 "succeeded": True,
+#                 "case": {
+#                     "uuid": "ed6ceb29-b4b9-427c-99b8-635984198a59",
+#                     "keywords": ["math", "addition"],
+#                     "value": 0,
+#                     "turns": [
+#                         {"user": "1+1", "expected": 2},
+#                         {"user": "Plus 100", "expected": 102},
+#                         {"user": "divide by two", "expected": 51},
+#                     ],
+#                 },
+#                 "stages": {
+#                     "turns": [
+#                         {"succeeded": True, "stages": {"extract": 2}},
+#                         {"succeeded": True, "stages": {"extract": 103}},
+#                         {"succeeded": True, "stages": {"extract": 51}},
+#                     ]
+#                 },
+#             },
+#         ],
+#     }
+#     console = MakeConsole()
+#     pipeline.summarize(console, runlog)
+#     console.render()
 
 
 go2()
