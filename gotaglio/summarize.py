@@ -16,9 +16,11 @@ def summarize(
     console = console_buffer("text/plain")
     if callable(spec.summarizer):
         spec.summarizer(console, runlog)
-    else:
+    elif spec.summarizer:
         s = Summarizer(spec)
         s.summarize(console, runlog)
+    else:
+        console.print("No summarizer defined.")
     console_buffer.render()
 
 class Summarizer:

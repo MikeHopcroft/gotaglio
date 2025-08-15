@@ -1,12 +1,17 @@
 # TODO
 
-* keyword filtering
-* Update documentation
+* unit tests for pipelines
+  * single turn
+  * multiple turns
+* preview() method
 * TODO: consider creating full conversation history for all preceding turns. Will need to somehow pass in the entire context and a turn index.
+* Keyword filtering
+* Update documentation
 * Is it ok for config merge to add new keys that didn't exist before? What about typos?
 * Design note about coercing types of a=b command line parameters.
   * It seems like argparse can't help here as it doesn't know about the type.
   * Perhaps pydantic can help. It might also help with invalid keys.
+* x Configure publish workflow.
 * x Investigate process_one_case() implementation differences
   * x director - what is "result["turn"] = turn"?
 * x Better name for format_case. Code reuse?
