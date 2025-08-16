@@ -1,7 +1,7 @@
 import json
 
 from .models import Model
-from .pipeline_spec import MappingSpec
+from .pipeline_spec import get_turn, MappingSpec
 
 
 class Flakey(Model):
@@ -48,7 +48,8 @@ class Perfect(Model):
 
 
 def expected(mappings, result):
-    return to_llm_string(result["case"][mappings.expected])
+    turn = get_turn(result)
+    return to_llm_string(turn[mappings.expected])
 
 
 def to_llm_string(value):

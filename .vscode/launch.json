@@ -74,7 +74,7 @@
         "--concurrency",
         "1",
         "prepare.template=samples2/menu/data/template.txt",
-        "infer.model.name=gpt4o"
+        "infer.model.name=perfect"
       ]
     },
     {

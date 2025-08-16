@@ -1,11 +1,10 @@
-from glom import glom
 from rich.table import Table
 from rich.text import Text
 from typing import Any
 
 from .helpers import IdShortener
 from .make_console import MakeConsole
-from .pipeline_spec import PipelineSpec, column_spec
+from .pipeline_spec import column_spec, get_turn_result, PipelineSpec
 
 
 def summarize(
@@ -23,14 +22,12 @@ def summarize(
         console.print("No summarizer defined.")
     console_buffer.render()
 
+
 class Summarizer:
-    def __init__(
-        self, spec: PipelineSpec
-    ):
+    def __init__(self, spec: PipelineSpec):
         self._passed_predicate = spec.passed_predicate
         self._summarizer_spec = spec.summarizer
         self._mapping_spec = spec.mappings
-        self._using_turns = spec.mappings.turns is not None
 
     # This method is used to summarize the results of each pipeline run.
     # It is invoked by the `run`, `rerun`, and `summarize` sub-commands.
@@ -46,16 +43,13 @@ class Summarizer:
             def id_cell(result, turn_index):
                 return (
                     short_id(result["case"]["uuid"])
-                    if self._using_turns
+                    if uses_turns(result)
                     else f"{short_id(result['case']['uuid'])}.{turn_index:02}"
                 )
 
             def status_cell(result, turn_index):
-                succeeded = (
-                    result["stages"]["turns"][turn_index]["succeeded"]
-                    if self._using_turns
-                    else result["succeeded"]
-                )
+                x = get_turn_result(result, turn_index)
+                succeeded = x["succeeded"]
                 return (
                     Text("COMPLETE", style="bold green")
                     if succeeded
@@ -83,9 +77,6 @@ class Summarizer:
                     column.name,
                     **column.params,
                 )
-            # TODO: reinstate
-            #   table.add_column("score", justify="right", style="green")
-            #   table.add_column("user", justify="left", style="green")
 
             # Set up some counters for totals to be presented after the table.
             self.total_count = 0
@@ -96,34 +87,32 @@ class Summarizer:
 
             # Add one row for each case.
             for result in results:
-                turn_results = (
-                    glom(result, "stages.turns", default=[])
-                    if self._using_turns
-                    else result
-                )
-                if self._using_turns:
-                    for index, turn_result in enumerate(turn_results):
-                        self.render_one_row(table, columns, result, index, turn_result)
+                if uses_turns(result):
+                    for index, turn_result in enumerate(result["turns"]):
+                        self.render_one_row(
+                            table, columns, result, index, turn_result # ["stages"]
+                        )
                 else:
                     # If there are no turns, we just render the result as a single row.
-                    self.render_one_row(table, columns, result, 0, turn_results)
+                    self.render_one_row(table, columns, result, 0, result) # ["stages"])
 
             # Display the table and the totals.
             console.print(table)
             console.print()
             console.print(f"Total: {self.total_count}")
-            console.print(
-                f"Complete: {self.complete_count}/{self.total_count} ({(self.complete_count/self.total_count)*100:.2f}%)"
-            )
-            console.print(
-                f"Error: {self.error_count}/{self.total_count} ({(self.error_count/self.total_count)*100:.2f}%)"
-            )
-            console.print(
-                f"Passed: {self.passed_count}/{self.total_count} ({(self.passed_count/self.total_count)*100:.2f}%)"
-            )
-            console.print(
-                f"Failed: {self.failed_count}/{self.total_count} ({(self.failed_count/self.total_count)*100:.2f}%)"
-            )
+            if self.total_count != 0:
+                console.print(
+                    f"Complete: {self.complete_count}/{self.total_count} ({(self.complete_count/self.total_count)*100:.2f}%)"
+                )
+                console.print(
+                    f"Error: {self.error_count}/{self.total_count} ({(self.error_count/self.total_count)*100:.2f}%)"
+                )
+                console.print(
+                    f"Passed: {self.passed_count}/{self.total_count} ({(self.passed_count/self.total_count)*100:.2f}%)"
+                )
+                console.print(
+                    f"Failed: {self.failed_count}/{self.total_count} ({(self.failed_count/self.total_count)*100:.2f}%)"
+                )
             console.print()
 
     def render_one_row(self, table, columns, result, turn_index, turn_result):
@@ -150,6 +139,10 @@ def keywords_cell(result, turn_index):
         if "keywords" in result["case"]
         else ""
     )
+
+
+def uses_turns(result):
+    return "turns" in result["case"]
 
 
 keywords_column = column_spec(name="keywords", contents=keywords_cell)

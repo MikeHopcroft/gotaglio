@@ -1,5 +1,12 @@
 # TODO
 
+* Eliminate MappingSpec
+* rename get_turn to get_turn_case? Rationalize all three names
+* in status_cell() variable name x
+* uses_turns should be in pipeline_spec
+* menu.ipynb crashes in format on line 48
+
+
 * dag.ipynb has extra output cells at end
 * unit tests for pipelines
   * single turn

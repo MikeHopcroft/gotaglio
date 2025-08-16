@@ -106,3 +106,29 @@ class PipelineSpecs:
 
     def __len__(self):
         return len(self.pipelines)
+    
+
+def get_stages(context, turn_index=None):
+    if "turns" in context["case"]:
+        if turn_index is None:
+            turn_index = len(context["turns"]) - 1
+        return context["turns"][turn_index]["stages"]
+    else:
+        return context["stages"]
+
+
+def get_turn_result(context, turn_index=None):
+    if "turns" in context["case"]:
+        if turn_index is None:
+            turn_index = len(context["turns"]) - 1
+        return context["turns"][turn_index]
+    return context
+
+
+def get_turn(context, turn_index=None):
+    if "turns" in context["case"]:
+        if turn_index is None:
+            turn_index = len(context["turns"]) - 1
+        return context["case"]["turns"][turn_index]
+    return context["case"]
+

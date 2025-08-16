@@ -16,7 +16,9 @@ from gotaglio.format import format_messages
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
-    FormatterSpec,
+    FormatterSpec, 
+    get_stages,
+    get_turn,
     MappingSpec,
     PipelineSpec,
     SummarizerSpec,
@@ -131,23 +133,26 @@ def stages(name, config, registry):
 
     # Stage 1:Create the system and user messages
     async def prepare(context):
+        turn = get_turn(context)
         messages = [
             {"role": "system", "content": await template(context)},
-            {"role": "user", "content": context["case"]["user"]},
+            {"role": "user", "content": turn["user"]},
         ]
 
         return messages
 
     # Stage 2: Invoke the model to generate a response
     async def infer(context):
-        return await model.infer(context["stages"]["prepare"], context)
+        stages = get_stages(context)
+        return await model.infer(stages["prepare"], context)
 
     # Stage 3: Attempt to extract a numerical answer from the model response.
     # Note that this method will raise an exception if the response is not
     # a number.
     async def extract(context):
+        stages = get_stages(context)
         with ExceptionContext(f"Extracting JSON from LLM response."):
-            text = context["stages"]["infer"]
+            text = stages["infer"]
 
             # Strip off fenced code block markers, if present.
             marker = "```json\n"
@@ -158,10 +163,12 @@ def stages(name, config, registry):
 
     # Stage 4: Compare the model response to the expected answer.
     async def assess(context):
+        stages = get_stages(context)
+        turn = get_turn(context)
         repair = Repair("id", "options", [], ["name"], "name")
         repair.resetIds()
-        observed = repair.addIds(context["stages"]["extract"]["items"])
-        expected = repair.addIds(context["case"]["expected"]["items"])
+        observed = repair.addIds(stages["extract"]["items"])
+        expected = repair.addIds(turn["expected"]["items"])
         return repair.diff(observed, expected)
 
     # Define the pipeline

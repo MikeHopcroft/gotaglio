@@ -1,15 +1,14 @@
 from datetime import datetime, timedelta, timezone
-from glom import glom
 import traceback
 from typing import Any
 
 from .dag import Dag, run_dag
-# from .director2 import process_one_case
+
 from .exceptions import ExceptionContext
 from .mocks import Flakey, Perfect
 from .registry import Registry
 from .shared import apply_patch, flatten_dict
-from .pipeline_spec import MappingSpec, PipelineSpec
+from .pipeline_spec import PipelineSpec
 
 
 class Pipeline2:
@@ -37,17 +36,12 @@ class Pipeline2:
         # NOTE: this must be done before spec.create_dag, which accesses
         # models from the registry.
         registry = Registry(global_registry)
-        Flakey(registry, spec.mappings,{})
+        Flakey(registry, spec.mappings, {})
         Perfect(registry, spec.mappings, {})
 
         # Create the DAG.
         turn_dag = spec.create_dag(spec.name, self._config, registry)
-        if spec.mappings and spec.mappings.turns is not None:
-            # Wrap the single-turn DAG to handle multiple turns.
-            self._dag = create_turns_dag(spec.mappings, turn_dag)
-        else:
-            # Just running a single turn.
-            self._dag = turn_dag
+        self._dag = turn_dag
 
     def get_config(self):
         return self._config
@@ -68,46 +62,6 @@ class Pipeline2:
             if k not in config and not isinstance(v, Internal):
                 diff.append((k, format_config(default_config[k]), None))
         return diff
-
-
-def create_turns_dag(mapping_spec: MappingSpec, turn_dag):
-    async def turns(context):
-        initial = mapping_spec.initial
-        expected = mapping_spec.expected
-        observed = mapping_spec.observed
-
-        case = context["case"]
-
-        # The turn field in the context controls whether the
-        # pipeline executes a single turn or all turns.
-        turn_index = glom(context, "turn", default=None)
-        if turn_index is None:
-            # We're running all of the turns
-            turns = case["turns"]
-            # When running all turns, start with the initial value for the case.
-            value = case[initial]
-        else:
-            # We're running a single turn in isolation
-            # Start with the value from the previous turn.
-            turns = [case["turns"][turn_index]]
-            value = glom(case, f"turns[{turn_index - 1}].{expected}", default=None)
-
-        results = []
-        for turn in turns:
-            turn_case = turn.copy()
-            turn_case[initial] = value
-
-            result = await process_one_case(turn_case, turn_dag, None)
-
-            results.append(result)
-            value = glom(result, f"stages.{observed}", default=None)
-            if result["succeeded"] == False or value is None:
-                # If the extraction failed, we stop processing remaining turns.
-                break
-
-        return results
-
-    return Dag.from_spec([{"name": "turns", "function": turns, "inputs": []}])
 
 
 # Value in Pipeline configuration, indicating the value should be supplied by
@@ -169,7 +123,6 @@ async def process_one_case(case, dag, completed):
         "succeeded": False,
         "metadata": {"start": str(datetime.fromtimestamp(start, timezone.utc))},
         "case": case,
-        "stages": {},
     }
 
     try:
@@ -190,5 +143,3 @@ async def process_one_case(case, dag, completed):
     result["metadata"]["elapsed"] = str(timedelta(seconds=elapsed))
     result["succeeded"] = True
     return result
-
-

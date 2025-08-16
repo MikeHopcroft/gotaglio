@@ -1,5 +1,6 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from glom import glom
 import traceback
 from typing import Any, List
 
@@ -13,7 +14,7 @@ class Dag:
         for i in range(1, len(spec)):
             spec[i]["inputs"] = [spec[i - 1]["name"]]
         return cls(spec, uses_turns)
-    
+
     @classmethod
     def from_spec(cls, spec: List[dict[str, Any]], uses_turns: bool = False):
         return cls(spec, uses_turns)
@@ -96,6 +97,45 @@ def make_task(dag, name, context):
 
 
 async def run_dag(dag_object, context):
+    turns = glom(context, "case.turns", default=None)
+    if turns is None:
+        stages = {}
+        context["stages"] = stages
+        await run_dag_helper(dag_object, context, stages)
+    else:
+        context["turns"] = []
+        for index in range(len(turns)):
+            # TODO: DRY: can use len(turns) instead of turn_index
+            context["turn_index"] = index
+            start = datetime.now().timestamp()
+            metadata = {"start": str(datetime.fromtimestamp(start, timezone.utc))}
+            stages = {}
+            turn = {
+                "succeeded": False,
+                "metadata": metadata,
+                "stages": stages,
+            }
+            context["turns"].append(turn)
+            try:
+                await run_dag_helper(dag_object, context, stages)
+            except Exception as e:
+                turn["exception"] = {
+                    "message": ExceptionContext.format_message(e),
+                    "traceback": traceback.format_exc(),
+                    "time": str(datetime.now(timezone.utc)),
+                }
+                # Stop processing turns after an error.                
+                return
+
+            # Record the successful completion of this turn.
+            end = datetime.now().timestamp()
+            elapsed = end - start
+            metadata["end"] = str(datetime.fromtimestamp(end, timezone.utc))
+            metadata["elapsed"] = str(timedelta(seconds=elapsed))
+            turn["succeeded"] = True
+
+
+async def run_dag_helper(dag_object, context, stages):
     dag = dag_object.dag
 
     # DESIGN NOTE: the dict of unfulfilled dependencies is stored per-run,
@@ -126,11 +166,11 @@ async def run_dag(dag_object, context):
             (name, result) = task.result()
 
             # Record the result of this stage in the context.
-            if name in context["stages"]:
+            if name in stages:
                 raise ValueError(
                     f"Internal error: node `stages.{name}` already in context"
                 )
-            context["stages"][name] = result
+            stages[name] = result
 
             # Propagate the outputs to subsequent stages.
             node = dag[name]
