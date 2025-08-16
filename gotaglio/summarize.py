@@ -4,7 +4,7 @@ from typing import Any
 
 from .helpers import IdShortener
 from .make_console import MakeConsole
-from .pipeline_spec import column_spec, get_turn_result, PipelineSpec, uses_turns
+from .pipeline_spec import column_spec, get_result, PipelineSpec, uses_turns
 
 
 def summarize(
@@ -48,8 +48,7 @@ class Summarizer:
                 )
 
             def status_cell(result, turn_index):
-                turn = get_turn_result(result, turn_index)
-                succeeded = turn["succeeded"]
+                succeeded = get_result(result, turn_index)["succeeded"]
                 return (
                     Text("COMPLETE", style="bold green")
                     if succeeded

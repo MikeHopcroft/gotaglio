@@ -108,16 +108,24 @@ class PipelineSpecs:
         return len(self.pipelines)
 
 
+# Used by stage functions to get inputs
 def get_stages(context, turn_index=None):
-    if "turns" in context["case"]:
-        if turn_index is None:
-            turn_index = len(context["turns"]) - 1
-        return context["turns"][turn_index]["stages"]
-    else:
-        return context["stages"]
+    """
+    Returns the portion of the context that corresponds to the pipeline
+    `stages` results for either the most recently processed turn or a
+    specified turn.
+    """
+    return get_result(context, turn_index)["stages"]
 
 
-def get_turn_result(context, turn_index=None):
+# Used by summarize() to get `succeeded`
+def get_result(context, turn_index=None):
+    """
+    Returns the portion of the context that corresponds to the
+    results of a test run, for either the most recently processed
+    turn or a specified turn. Returns the entire context if the
+    test case does not use turns.
+    """
     if "turns" in context["case"]:
         if turn_index is None:
             turn_index = len(context["turns"]) - 1
@@ -125,7 +133,15 @@ def get_turn_result(context, turn_index=None):
     return context
 
 
+# Used by stage functions and model mocks to get inputs.
 def get_turn(context, turn_index=None):
+    """
+    Returns the portion of the context's test case that defines a
+    turn. If the case uses turns, it will return the last turn if
+    no `turn_index` is specified. The last turn corresponds to the
+    current turn in `run_dag()`. Returns the case itself if the
+    case does not use turns.
+    """
     if "turns" in context["case"]:
         if turn_index is None:
             turn_index = len(context["turns"]) - 1
@@ -134,4 +150,7 @@ def get_turn(context, turn_index=None):
 
 
 def uses_turns(result):
+    """
+    Check if the test case `result` is based on uses turns.
+    """
     return "turns" in result["case"]

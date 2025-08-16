@@ -1,7 +1,9 @@
 # TODO
 
+* Test publish
+* Test with downstream packages
 * Eliminate MappingSpec
-* rename get_turn to get_turn_case? Rationalize all three names
+* x rename get_turn to get_turn_case? Rationalize all three names
 * x in status_cell() variable name x
 * x uses_turns should be in pipeline_spec
 * x menu.ipynb crashes in format on line 48
