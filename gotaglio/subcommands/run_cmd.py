@@ -10,6 +10,7 @@ from ..shared import (
     read_data_file,
     read_json_file,
 )
+from ..summarize import summarize
 
 def run_command(pipeline_specs: PipelineSpecs, args):
     cases_file = args.cases
@@ -35,7 +36,7 @@ def run_command(pipeline_specs: PipelineSpecs, args):
     run_with_progress_bar(director)
 
     director.write()
-    director.summarize()
+    summarize(pipeline_spec, director._results)
 
 
 def rerun_command(pipeline_specs: PipelineSpecs, args):

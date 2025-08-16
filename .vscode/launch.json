@@ -46,34 +46,34 @@
       ]
     },
     {
-      "name": "simple",
+      "name": "calculator",
       "type": "debugpy",
       "request": "launch",
-      "program": "samples2/simple/simple.py",
+      "program": "samples2/calc/calc.py",
       "console": "integratedTerminal",
       "args": [
         "run",
-        "calculator",
-        "samples2/simple/data/cases.yaml",
+        "calc",
+        "samples2/calc/data/cases.yaml",
         "--concurrency",
         "1",
-        "prepare.template=samples2/simple/data/template.txt",
+        "prepare.template=samples2/calc/data/template.txt",
         "infer.model.name=perfect"
       ]
     },
     {
-      "name": "restaurant",
+      "name": "menu",
       "type": "debugpy",
       "request": "launch",
-      "program": "samples2/restaurant/restaurant.py",
+      "program": "samples2/menu/menu.py",
       "console": "integratedTerminal",
       "args": [
         "run",
-        "restaurant",
-        "samples2/restaurant/data/cases.yaml",
+        "menu",
+        "samples2/menu/data/cases.yaml",
         "--concurrency",
         "1",
-        "prepare.template=samples2/restaurant/data/template.txt",
+        "prepare.template=samples2/menu/data/template.txt",
         "infer.model.name=gpt4o"
       ]
     },
