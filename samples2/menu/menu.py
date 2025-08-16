@@ -137,7 +137,6 @@ def stages(name, config, registry):
         i = len(context["turns"]) - 1
         cart = case["cart"] if i == 0 else context["turns"][i - 1]["stages"]["extract"]
         turn = case["turns"][-1]
-        turn = get_turn(context)
         messages = [
             {"role": "system", "content": await template(context)},
             {"role": "assistant", "content": to_json_string(cart)},
@@ -207,6 +206,7 @@ def passed_predicate(result):
 
     Used by the `format` and `summarize` sub-commands.
     """
+    # TODO: is this right?
     return glom(result, "stages.assess.cost", default=None) == 0
 
 
@@ -297,7 +297,6 @@ def passed_predicate(result):
     Used by the `format` and `summarize` sub-commands.
     """
     return get_stages(result)["assess"]["cost"] == 0
-    # return glom(result, "stages.assess.cost", default=None) == 0
 
 
 ###############################################################################

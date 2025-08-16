@@ -2,10 +2,15 @@
 
 * Test publish
 * Test with downstream packages
+* Update downstream packages
 * isolated_turn
 * rename 2-versions: pipeline2, director2
+* remove turn_index from context
 * Menu shoud include entire prior conversation
   * filter query based on priors
+  * is passed_predicate right? What about turns? is it for the case or the turn?
+  * pipeline spec should validate expected() function is not None (use ... also)
+  in format_turn, is stages the right name? Maybe turn_result?
 * x Should format_turn take turn_result?
 * x Eliminate MappingSpec
 * x menu.ipynd crash on format dc20a60b-d7f0-4e04-9841-9b5f5789d31c
