@@ -12,7 +12,7 @@ from gotaglio.exceptions import ExceptionContext
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
-    MappingSpec,
+    get_turn,
     PipelineSpec,
     SummarizerSpec,
 )
@@ -44,7 +44,7 @@ from gotaglio.summarize import keywords_column
 # There is no requirement to define a configuration dict for each stage.
 # It is the implementation of the pipeline that determines which stages
 # require configuration dicts.
-configuration={
+configuration = {
     "prepare": {
         "template": Prompt("Template file for system message"),
         "template_text": Internal(),
@@ -62,6 +62,7 @@ configuration={
         }
     },
 }
+
 
 ###############################################################################
 #
@@ -168,17 +169,6 @@ def stages(name, config, registry):
 # Summarizer extensions
 #
 ###############################################################################
-def passed_predicate(result):
-    """
-    Predicate function to determine if the result is considered passing.
-    This checks if the assessment stage's result is zero, indicating
-    that the LLM response matches the expected answer.
-
-    Used by the `format` and `summarize` sub-commands.
-    """
-    return glom(result, "stages.assess", default=None) == 0
-
-
 def cost_cell(result, turn_index):
     """
     For user-defined `cost` column in the summary report table.
@@ -201,6 +191,29 @@ def user_cell(result, turn_index):
     This cell displays the user input for the specified turn index.
     """
     return result["case"]["user"]
+
+
+###############################################################################
+#
+# Pipeline Extensions
+#
+###############################################################################
+def expected(result):
+    """
+    Returns the expected value from a turn. Used by mock models.
+    """
+    return get_turn(result)["answer"]
+
+
+def passed_predicate(result):
+    """
+    Predicate function to determine if the result is considered passing.
+    This checks if the assessment stage's result is zero, indicating
+    that the LLM response matches the expected answer.
+
+    Used by the `format` and `summarize` sub-commands.
+    """
+    return glom(result, "stages.assess", default=None) == 0
 
 
 ###############################################################################
@@ -235,6 +248,8 @@ calc_pipeline_spec = PipelineSpec(
     },
     # Defines the directed acyclic graph (DAG) of stage functions.
     create_dag=stages,
+    # Required function to extract the expected answer from the test case.
+    expected=expected,
     # Optional predicate determines whether a case is considered passing.
     # Used by the `format` and `summarize` sub-commands.
     passed_predicate=passed_predicate,
@@ -246,12 +261,6 @@ calc_pipeline_spec = PipelineSpec(
             keywords_column,
             ColumnSpec(name="user", contents=user_cell),
         ]
-    ),
-    mappings=MappingSpec(
-        initial="value",
-        expected="answer",
-        observed="extract",
-        user="user",
     ),
 )
 

@@ -1,7 +1,8 @@
 import json
+from typing import Any, Callable
 
 from .models import Model
-from .pipeline_spec import get_turn, MappingSpec
+from .pipeline_spec import get_turn
 
 
 class Flakey(Model):
@@ -12,15 +13,17 @@ class Flakey(Model):
       3. raising an exception
     """
 
-    def __init__(self, registry, mappings: MappingSpec, configuration):
+    def __init__(
+        self, registry, expected: Callable[[dict[str, Any]], Any], configuration
+    ):
         self._counter = -1
-        self._mappings = mappings
+        self._expected = expected
         registry.register_model("flakey", self)
 
     async def infer(self, messages, result=None):
         self._counter += 1
         if self._counter % 3 == 0:
-            return expected(self._mappings, result)
+            return to_llm_string(self._expected(result))
         elif self._counter % 3 == 1:
             return "hello world"
         else:
@@ -36,20 +39,17 @@ class Perfect(Model):
     from result["case"]["answer"]
     """
 
-    def __init__(self, registry, mappings: MappingSpec, configuration):
+    def __init__(
+        self, registry, expected: Callable[[dict[str, Any]], Any], configuration
+    ):
         registry.register_model("perfect", self)
-        self._mappings = mappings
+        self._expected = expected
 
     async def infer(self, messages, result=None):
-        return expected(self._mappings, result)
+        return to_llm_string(self._expected(result))
 
     def metadata(self):
         return {}
-
-
-def expected(mappings, result):
-    turn = get_turn(result)
-    return to_llm_string(turn[mappings.expected])
 
 
 def to_llm_string(value):

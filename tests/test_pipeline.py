@@ -3,13 +3,9 @@ from glom import glom
 import pytest
 
 from gotaglio.dag import Dag
-from gotaglio.director2 import Director2
 from gotaglio.gotag import Gotaglio
 from gotaglio.pipeline_spec import (
-    ColumnSpec,
-    MappingSpec,
     PipelineSpec,
-    SummarizerSpec,
 )
 
 
@@ -49,12 +45,6 @@ def test_single_turn_pipeline():
         },
         create_dag=create_dag,
         passed_predicate=passed_predicate,
-        mappings=MappingSpec(
-            initial="value",
-            expected="answer",
-            observed="stage3",
-            user="user",
-        ),
     )
 
     config_initial = 2000
@@ -98,13 +88,6 @@ def test_multi_turn_pipeline():
         },
         create_dag=create_dag,
         passed_predicate=passed_predicate,
-        mappings=MappingSpec(
-            turns="turns",
-            initial="value",
-            expected="answer",
-            observed="stage3",
-            user="user",
-        ),
     )
 
     config_initial = 2000

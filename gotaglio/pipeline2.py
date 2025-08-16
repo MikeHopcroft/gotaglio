@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 import traceback
 from typing import Any
 
-from .dag import Dag, run_dag
+from .dag import run_dag
 
 from .exceptions import ExceptionContext
 from .mocks import Flakey, Perfect
@@ -36,8 +36,8 @@ class Pipeline2:
         # NOTE: this must be done before spec.create_dag, which accesses
         # models from the registry.
         registry = Registry(global_registry)
-        Flakey(registry, spec.mappings, {})
-        Perfect(registry, spec.mappings, {})
+        Flakey(registry, spec.expected, {})
+        Perfect(registry, spec.expected, {})
 
         # Create the DAG.
         turn_dag = spec.create_dag(spec.name, self._config, registry)

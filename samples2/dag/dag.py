@@ -52,26 +52,20 @@ def stages(name, config, registry):
     async def a(context):
         return await work("A", 0.01)
 
-
     async def b(context):
         return await work("B", 0.01)
-
 
     async def c(context):
         return await work("C", 0.02)
 
-
     async def d(context):
         return await work("B", 0.01)
-
 
     async def e(context):
         return await work("E", 0.01)
 
-
     async def f(context):
         return await work("F", 0.01)
-
 
     # The work() function is used by each stage to simulate work.
     # It uses sequence numbers to record start end end times.
@@ -95,7 +89,6 @@ def stages(name, config, registry):
         counter += 1
         return counter
 
-
     # Finally, return the DAG specification for
     #
     #     A    E
@@ -105,7 +98,7 @@ def stages(name, config, registry):
     #     D    |
     #       \ /
     #        F
-    #       
+    #
     spec = [
         {"name": "A", "function": a, "inputs": []},
         {"name": "B", "function": b, "inputs": ["A"]},
@@ -116,6 +109,7 @@ def stages(name, config, registry):
     ]
 
     return Dag.from_spec(spec)
+
 
 ###############################################################################
 #
@@ -129,6 +123,7 @@ def format(console, runlog):
         print("No results.")
     else:
         timeline(results[0])
+
 
 ###############################################################################
 #
@@ -150,14 +145,13 @@ def summarize(console, runlog):
 # Pipeline Specification
 #
 ###############################################################################
-
 dag_pipeline_spec = PipelineSpec(
     # Pipeline name used in `gotag run <pipeline>.`
-    name = "dag",
+    name="dag",
     # Pipeline description shown by `gotag pipelines.`
-    description = "An example of a directed acyclic graph (DAG) pipeline.",
+    description="An example of a directed acyclic graph (DAG) pipeline.",
     # TODO: configuration values for use by pipeline stages???
-    configuration= {},
+    configuration={},
     create_dag=stages,
     # passed_predicate=lambda result: True,
     formatter=format,
@@ -176,8 +170,6 @@ dag_pipeline_spec = PipelineSpec(
 #     def __init__(self, registry, replacement_config, flat_config_patch):
 #         default_config = {}
 #         super().__init__(default_config, replacement_config, flat_config_patch)
-
-
 
 
 #     # For the purposes of this demo we define a very limited summarize() method

@@ -19,8 +19,6 @@ from gotaglio.pipeline_spec import (
     FormatterSpec,
     get_stages,
     get_turn,
-    get_turn_index,
-    MappingSpec,
     PipelineSpec,
     SummarizerSpec,
 )
@@ -217,7 +215,7 @@ def cost_cell(result, turn_index):
     Provides contents and formatting for the cost cell for the summary table.
     The cost is the difference between the model's response and the expected answer.
     """
-    cost = glom(result, f"stages.turns.{turn_index}.stages.assess.cost", default=None)
+    cost = get_stages(result, turn_index)["assess"]["cost"]
     cost_text = "" if cost == None else f"{cost:.2f}"
     return (
         Text(cost_text, style="bold green")
@@ -232,7 +230,7 @@ def user_cell(result, turn_index):
     Provides contents and formatting for the user cell in the summary table.
     This cell displays the user input for the specified turn index.
     """
-    return result["case"]["turns"][turn_index]["user"]
+    return get_turn(result, turn_index)["user"]
 
 
 ###############################################################################
@@ -240,7 +238,9 @@ def user_cell(result, turn_index):
 # Formatter extensions
 #
 ###############################################################################
-def format_turn(console: Console, turn_index, turn_result: dict[str, Any]):
+def format_turn(
+    console: Console, turn_index, result: dict[str, Any], turn_result: dict[str, Any]
+):
     passed = passed_predicate(turn_result)
     if passed:
         console.print(f"### Turn {turn_index + 1}: **PASSED**  ")
@@ -269,11 +269,34 @@ def format_turn(console: Console, turn_index, turn_result: dict[str, Any]):
     else:
         console.print("**expected:**")
         console.print("```json")
-        console.print(to_json_string(turn_result["case"]["expected"]))
+        console.print(to_json_string(result["case"]["turns"][turn_index]["expected"]))
         console.print("```")
         console.print("**Repairs:**")
         for step in turn_result["stages"]["assess"]["steps"]:
             console.print(f"* {step}")
+
+
+###############################################################################
+#
+# Pipeline extensions
+#
+###############################################################################
+def expected(result):
+    """
+    Returns the expected value from a turn. Used by mock models.
+    """
+    return get_turn(result)["expected"]
+
+
+def passed_predicate(result):
+    """
+    Predicate function to determine if the result is considered passing.
+    This checks if the assessment stage's result is zero, indicating
+    that the LLM response matches the expected answer.
+
+    Used by the `format` and `summarize` sub-commands.
+    """
+    return glom(result, "stages.assess.cost", default=None) == 0
 
 
 ###############################################################################
@@ -291,6 +314,8 @@ menu_pipeline_spec = PipelineSpec(
     configuration=configuration,
     # Defines the directed acyclic graph (DAG) of stage functions.
     create_dag=stages,
+    # Required function to extract the expected answer from the test case.
+    expected=expected,
     # Optional FormatterSpec used by the `format` commend to display a rich
     # transcript of the case.
     formatter=FormatterSpec(
@@ -307,13 +332,6 @@ menu_pipeline_spec = PipelineSpec(
             keywords_column,
             ColumnSpec(name="user", contents=user_cell),
         ]
-    ),
-    mappings=MappingSpec(
-        turns="turns",
-        initial="cart",
-        expected="expected",
-        observed="extract",
-        user="query",
     ),
 )
 

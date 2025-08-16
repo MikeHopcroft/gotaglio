@@ -27,7 +27,6 @@ class Summarizer:
     def __init__(self, spec: PipelineSpec):
         self._passed_predicate = spec.passed_predicate
         self._summarizer_spec = spec.summarizer
-        self._mapping_spec = spec.mappings
 
     # This method is used to summarize the results of each pipeline run.
     # It is invoked by the `run`, `rerun`, and `summarize` sub-commands.
