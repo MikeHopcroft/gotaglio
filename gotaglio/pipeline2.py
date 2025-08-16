@@ -3,7 +3,7 @@ from glom import glom
 import traceback
 from typing import Any
 
-from .dag import build_dag_from_spec, run_dag
+from .dag import Dag, run_dag
 # from .director2 import process_one_case
 from .exceptions import ExceptionContext
 from .mocks import Flakey, Perfect
@@ -107,7 +107,7 @@ def create_turns_dag(mapping_spec: MappingSpec, turn_dag):
 
         return results
 
-    return build_dag_from_spec([{"name": "turns", "function": turns, "inputs": []}])
+    return Dag.from_spec([{"name": "turns", "function": turns, "inputs": []}])
 
 
 # Value in Pipeline configuration, indicating the value should be supplied by

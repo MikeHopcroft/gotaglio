@@ -2,7 +2,7 @@ import asyncio
 from glom import glom
 import pytest
 
-from gotaglio.dag import build_dag_from_linear
+from gotaglio.dag import Dag
 from gotaglio.director2 import Director2
 from gotaglio.gotag import Gotaglio
 from gotaglio.pipeline_spec import (
@@ -29,7 +29,7 @@ def create_dag(name, config, registry):
         "stage3": stage3,
     }
 
-    return build_dag_from_linear(stages)
+    return Dag.from_linear(stages)
 
 
 def test_single_turn_pipeline():

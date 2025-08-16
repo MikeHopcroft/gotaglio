@@ -21,7 +21,7 @@ import sys
 # gotaglio package, as if it had been installed.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from gotaglio.dag import build_dag_from_spec
+from gotaglio.dag import Dag
 from gotaglio.main import main
 from gotaglio.pipeline_spec import PipelineSpec
 
@@ -115,7 +115,7 @@ def stages(name, config, registry):
         {"name": "F", "function": f, "inputs": ["D", "E"]},
     ]
 
-    return build_dag_from_spec(spec)
+    return Dag.from_spec(spec)
 
 ###############################################################################
 #

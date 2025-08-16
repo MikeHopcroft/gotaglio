@@ -3,6 +3,11 @@ from rich.console import Console
 from typing import Any, Callable
 
 
+class TurnLocator(BaseModel):
+    index: int = Field(..., description="Turn index")
+    isolated: bool = Field(False, description="Is the turn isolated")
+
+
 class FormatterSpec(BaseModel):
     before_case: Callable[[Console, dict[str, Any]], None] = Field(
         default=None, description="Function to generate contents before each case"

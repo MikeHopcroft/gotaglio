@@ -42,6 +42,9 @@ python samples2\calc\calc.py run calc samples2\calc\data\cases.yaml prepare.temp
 
 45f b90
 python samples2\calc\calc.py compare 45f b90
+
+python samples2\dag\dag.py run dag samples2\dag\data\cases.yaml
+
 ~~~
 
 * Today

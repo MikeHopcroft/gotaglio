@@ -7,7 +7,7 @@ import sys
 # gotaglio package, as if it had been installed.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from gotaglio.dag import build_dag_from_linear
+from gotaglio.dag import Dag
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
@@ -160,7 +160,7 @@ def stages(name, config, registry):
         "assess": assess,
     }
 
-    return build_dag_from_linear(stages)
+    return Dag.from_linear(stages)
 
 
 ###############################################################################

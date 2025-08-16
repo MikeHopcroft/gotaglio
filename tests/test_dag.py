@@ -1,7 +1,7 @@
 import asyncio
 import pytest
 
-from gotaglio.dag import build_dag_from_spec, dag_spec_from_linear, run_dag
+from gotaglio.dag import Dag, run_dag
 
 
 def test_valid():
@@ -32,7 +32,7 @@ def test_duplicate_name():
 
     # Should raise an exception
     with pytest.raises(ValueError) as e:
-        build_dag_from_spec(spec)
+        Dag.from_spec(spec)
     assert "Duplicate node name 'A'" in str(e.value)
 
 
@@ -49,7 +49,7 @@ def test_invalid_input():
 
     # Should raise an exception
     with pytest.raises(ValueError) as e:
-        build_dag_from_spec(spec)
+        Dag.from_spec(spec)
     assert "Node B: cannot find input 'X'" in str(e.value)
 
 
@@ -66,7 +66,7 @@ def test_duplicate_input():
 
     # Should raise an exception
     with pytest.raises(ValueError) as e:
-        build_dag_from_spec(spec)
+        Dag.from_spec(spec)
     assert "Node B: duplicate input 'A'" in str(e.value)
 
 
@@ -83,7 +83,7 @@ def test_no_root():
 
     # Should raise an exception
     with pytest.raises(ValueError) as e:
-        build_dag_from_spec(spec)
+        Dag.from_spec(spec)
     assert "No nodes ready to run" in str(e.value)
 
 
@@ -100,7 +100,7 @@ def test_has_cycle():
 
     # Should raise an exception
     with pytest.raises(ValueError) as e:
-        build_dag_from_spec(spec)
+        Dag.from_spec(spec)
     assert "Cycle detected: A -> B -> D -> B" in str(e.value)
 
 
@@ -119,7 +119,7 @@ def test_unreachable_nodes():
 
     # Should raise an exception
     with pytest.raises(ValueError) as e:
-        build_dag_from_spec(spec)
+        Dag.from_spec(spec)
     assert "The following nodes are unreachable: E, F" in str(e.value)
 
 def test_valid():
@@ -134,7 +134,7 @@ def test_valid():
     ]
 
     # Should not raise an exception
-    build_dag_from_spec(spec)
+    Dag.from_spec(spec)
 
 
 def test_spec_from_linear():
@@ -153,7 +153,7 @@ def test_spec_from_linear():
         "C": h,
     }
 
-    observed = dag_spec_from_linear(linear)
+    observed = Dag.from_linear(linear)
     expected = [
         {"name": "A", "function": f, "inputs": []},
         {"name": "B", "function": g, "inputs": ["A"]},
@@ -206,7 +206,7 @@ async def test_run():
     ]
 
     # Should not raise an exception
-    dag = build_dag_from_spec(spec)
+    dag = Dag.from_spec(spec)
 
     context = {"stages": {}}
     await run_dag(dag, context)

@@ -1,72 +1,67 @@
 import asyncio
 from datetime import datetime, timezone
 import traceback
+from typing import Any, List
 
 from .exceptions import ExceptionContext
 
 
-def dag_spec_from_linear(stages):
-    spec = [{"name": k, "function": v, "inputs": []} for k,v in stages.items()]
-    for i in range(1, len(spec)):
-        spec[i]["inputs"] = [spec[i-1]["name"]]
-    return spec
-
-def build_dag_from_linear(stages):
-    """
-    Build a DAG from a linear sequence of stages. Each stage is a coroutine
-    function that takes a context dictionary as an argument.
+class Dag:
+    @classmethod
+    def from_linear(cls, stages: dict[str, Any], uses_turns: bool = False):
+        spec = [{"name": k, "function": v, "inputs": []} for k, v in stages.items()]
+        for i in range(1, len(spec)):
+            spec[i]["inputs"] = [spec[i - 1]["name"]]
+        return cls(spec, uses_turns)
     
-    Args:
-        stages (dict): A dictionary where keys are stage names and values are
-                       coroutine functions.
-    
-    Returns:
-        dict: A DAG specification.
-    """
-    spec = dag_spec_from_linear(stages)
-    return build_dag_from_spec(spec)
+    @classmethod
+    def from_spec(cls, spec: List[dict[str, Any]], uses_turns: bool = False):
+        return cls(spec, uses_turns)
 
-def build_dag_from_spec(spec):
-    # Create basic DAG with input links.
-    if len(spec) == 0:
-        raise ValueError("Empty graph specication")
-    dag = {}
-    for node in spec:
-        if node["name"] in dag:
-            raise ValueError(f"Duplicate node name '{node['name']}'")
-        dag[node["name"]] = {
-            "function": node["function"],
-            "inputs": node["inputs"],
-            "outputs": [],
-            "visited": False,
-            "live": False,
-        }
+    def __init__(self, spec: List[dict[str, Any]], uses_turns: bool = False):
+        self.uses_turns = uses_turns
+        # Create basic DAG with input links.
+        if len(spec) == 0:
+            raise ValueError("Empty graph specication")
+        dag = {}
+        for node in spec:
+            if node["name"] in dag:
+                raise ValueError(f"Duplicate node name '{node['name']}'")
+            dag[node["name"]] = {
+                "function": node["function"],
+                "inputs": node["inputs"],
+                "outputs": [],
+                "visited": False,
+                "live": False,
+            }
 
-    # Add output links for use by run_dag().
-    for k, dest in dag.items():
-        unique_inputs = set()
-        for input in dest["inputs"]:
-            if input in unique_inputs:
-                raise ValueError(f"Node {k}: duplicate input '{input}'")
-            if input not in dag:
-                raise ValueError(f"Node {k}: cannot find input '{input}'")
-            unique_inputs.add(input)
-            src = dag[input]
-            src["outputs"].append(k)
+        # Add output links for use by run_dag().
+        for k, dest in dag.items():
+            unique_inputs = set()
+            for input in dest["inputs"]:
+                if input in unique_inputs:
+                    raise ValueError(f"Node {k}: duplicate input '{input}'")
+                if input not in dag:
+                    raise ValueError(f"Node {k}: cannot find input '{input}'")
+                unique_inputs.add(input)
+                src = dag[input]
+                src["outputs"].append(k)
 
-    # Check for cycles
-    roots = [k for k, v in dag.items() if not v["inputs"]]
-    if not roots:
-        raise ValueError("No nodes ready to run. At least one node must have no inputs.")
-    for root in roots:
-        check_for_cycles(dag, root, [])
+        # Check for cycles
+        roots = [k for k, v in dag.items() if not v["inputs"]]
+        if not roots:
+            raise ValueError(
+                "No nodes ready to run. At least one node must have no inputs."
+            )
+        for root in roots:
+            check_for_cycles(dag, root, [])
 
-    # Check for unreachable nodes
-    if any(not v["visited"] for v in dag.values()):
-        names = [k for k, v in dag.items() if not v["visited"]]
-        raise ValueError(f"The following nodes are unreachable: {', '.join(names)}")
+        # Check for unreachable nodes
+        if any(not v["visited"] for v in dag.values()):
+            names = [k for k, v in dag.items() if not v["visited"]]
+            raise ValueError(f"The following nodes are unreachable: {', '.join(names)}")
 
-    return dag
+        self.dag = dag
 
 
 def check_for_cycles(dag, node, path):
@@ -100,7 +95,9 @@ def make_task(dag, name, context):
     return asyncio.create_task(run_task(dag, name, context))
 
 
-async def run_dag(dag, context):
+async def run_dag(dag_object, context):
+    dag = dag_object.dag
+
     # DESIGN NOTE: the dict of unfulfilled dependencies is stored per-run,
     # instead of in the DAG to allow for multiple concurrent runs of the same
     # DAG with different contexts.
