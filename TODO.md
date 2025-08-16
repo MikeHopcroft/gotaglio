@@ -2,13 +2,13 @@
 
 * Test publish
 * Test with downstream packages
-* . Eliminate MappingSpec
-* Should format_turn take turn_result?
 * isolated_turn
 * rename 2-versions: pipeline2, director2
-* x menu.ipynd crash on format dc20a60b-d7f0-4e04-9841-9b5f5789d31c
 * Menu shoud include entire prior conversation
   * filter query based on priors
+* x Should format_turn take turn_result?
+* x Eliminate MappingSpec
+* x menu.ipynd crash on format dc20a60b-d7f0-4e04-9841-9b5f5789d31c
 * x rename get_turn to get_turn_case? Rationalize all three names
 * x in status_cell() variable name x
 * x uses_turns should be in pipeline_spec

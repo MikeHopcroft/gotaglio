@@ -113,7 +113,7 @@ class Summarizer:
 
     def render_one_row(self, table, columns, result, turn_index, turn_result):
         succeeded = turn_result["succeeded"]
-        passed = self._passed_predicate(turn_result)
+        passed = self._passed_predicate(result)
 
         self.total_count += 1
         if succeeded:

@@ -17,6 +17,7 @@ from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
     FormatterSpec,
+    get_result,
     get_stages,
     get_turn,
     PipelineSpec,
@@ -238,29 +239,28 @@ def user_cell(result, turn_index):
 # Formatter extensions
 #
 ###############################################################################
-def format_turn(
-    console: Console, turn_index, result: dict[str, Any], turn_result: dict[str, Any]
-):
-    passed = passed_predicate(turn_result)
+def format_turn(console: Console, turn_index, result: dict[str, Any]):
+    stages = get_result(result)
+    passed = passed_predicate(result)
     if passed:
         console.print(f"### Turn {turn_index + 1}: **PASSED**  ")
     else:
-        cost = glom(turn_result, "stages.assess.cost", default=None)
+        cost = glom(stages, "stages.assess.cost", default=None)
         console.print(f"### Turn {turn_index + 1}: **FAILED:** (cost={cost})  ")
     console.print()
 
     input_tokens = sum(
         len(tokenizer.encode(message["content"]))
-        for message in turn_result["stages"]["prepare"]
+        for message in stages["stages"]["prepare"]
     )
     console.print(
-        f"Input tokens: {input_tokens}, output tokens: {len(tokenizer.encode(turn_result['stages']['infer']))}  \n"
+        f"Input tokens: {input_tokens}, output tokens: {len(tokenizer.encode(stages['stages']['infer']))}  \n"
     )
 
-    format_messages(console, turn_result["stages"]["prepare"], collapse=["system"])
+    format_messages(console, stages["stages"]["prepare"], collapse=["system"])
     console.print("**assistant:**")
     console.print("```json")
-    console.print(to_json_string(turn_result["stages"]["extract"]))
+    console.print(to_json_string(stages["stages"]["extract"]))
     console.print("```")
     console.print()
 
@@ -272,7 +272,7 @@ def format_turn(
         console.print(to_json_string(result["case"]["turns"][turn_index]["expected"]))
         console.print("```")
         console.print("**Repairs:**")
-        for step in turn_result["stages"]["assess"]["steps"]:
+        for step in stages["stages"]["assess"]["steps"]:
             console.print(f"* {step}")
 
 
@@ -296,7 +296,8 @@ def passed_predicate(result):
 
     Used by the `format` and `summarize` sub-commands.
     """
-    return glom(result, "stages.assess.cost", default=None) == 0
+    return get_stages(result)["assess"]["cost"] == 0
+    # return glom(result, "stages.assess.cost", default=None) == 0
 
 
 ###############################################################################

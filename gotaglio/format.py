@@ -89,7 +89,7 @@ def format_one_turn(spec, formatter_spec, console, index, result, turn_result):
         console.print()
     if turn_result["succeeded"]:
         if formatter_spec and formatter_spec.format_turn:
-            formatter_spec.format_turn(console, index, result, turn_result)
+            formatter_spec.format_turn(console, index, result)
         else:
             format_messages(
                 console, turn_result["stages"]["prepare"], collapse=["system"]

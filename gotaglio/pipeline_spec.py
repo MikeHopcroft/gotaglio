@@ -15,7 +15,7 @@ class FormatterSpec(BaseModel):
     after_case: Callable[[Console, dict[str, Any]], None] = Field(
         default=None, description="Function to generate contents after each case"
     )
-    format_turn: Callable[[Console, int, dict[str, Any], dict[str, Any]], None] = Field(
+    format_turn: Callable[[Console, int, dict[str, Any]], None] = Field(
         default=None, description="Function to generate contents for each turn"
     )
 
