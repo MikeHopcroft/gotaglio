@@ -3,6 +3,7 @@
 * Test publish
 * Test with downstream packages
 * Eliminate MappingSpec
+* isolated_turn
 * x rename get_turn to get_turn_case? Rationalize all three names
 * x in status_cell() variable name x
 * x uses_turns should be in pipeline_spec

@@ -16,9 +16,10 @@ from gotaglio.format import format_messages
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
     ColumnSpec,
-    FormatterSpec, 
+    FormatterSpec,
     get_stages,
     get_turn,
+    get_turn_index,
     MappingSpec,
     PipelineSpec,
     SummarizerSpec,
@@ -133,9 +134,14 @@ def stages(name, config, registry):
 
     # Stage 1:Create the system and user messages
     async def prepare(context):
+        case = context["case"]
+        i = len(context["turns"]) - 1
+        cart = case["cart"] if i == 0 else context["turns"][i - 1]["stages"]["extract"]
+        turn = case["turns"][-1]
         turn = get_turn(context)
         messages = [
             {"role": "system", "content": await template(context)},
+            {"role": "assistant", "content": to_json_string(cart)},
             {"role": "user", "content": turn["user"]},
         ]
 

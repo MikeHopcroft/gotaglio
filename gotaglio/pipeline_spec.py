@@ -149,6 +149,16 @@ def get_turn(context, turn_index=None):
     return context["case"]
 
 
+def get_turn_index(context):
+    """
+    Returns the index of the current turn in the context, or None
+    if the case does not use turns.
+    """
+    if "turns" in context["case"]:
+        return len(context["turns"]) - 1
+    return None
+
+
 def uses_turns(result):
     """
     Check if the test case `result` is based on uses turns.

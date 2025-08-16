@@ -42,9 +42,9 @@ class Summarizer:
 
             def id_cell(result, turn_index):
                 return (
-                    short_id(result["case"]["uuid"])
+                    f"{short_id(result['case']['uuid'])}.{turn_index:02}"
                     if uses_turns(result)
-                    else f"{short_id(result['case']['uuid'])}.{turn_index:02}"
+                    else short_id(result["case"]["uuid"])
                 )
 
             def status_cell(result, turn_index):
@@ -88,14 +88,10 @@ class Summarizer:
             for result in results:
                 if uses_turns(result):
                     for index, turn_result in enumerate(result["turns"]):
-                        self.render_one_row(
-                            table, columns, result, index, turn_result
-                        )
+                        self.render_one_row(table, columns, result, index, turn_result)
                 else:
                     # If there are no turns, we just render the result as a single row.
-                    self.render_one_row(
-                        table, columns, result, 0, result
-                    )
+                    self.render_one_row(table, columns, result, 0, result)
 
             # Display the table and the totals.
             console.print(table)

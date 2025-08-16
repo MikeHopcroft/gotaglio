@@ -81,6 +81,7 @@ def format(
                     console.print(formatter_spec.after_case(result))
     console_buffer.render()
 
+
 def format_one_turn(spec, formatter_spec, console, index, result, turn_result):
     if index > 0:
         console.print("---")
@@ -94,9 +95,7 @@ def format_one_turn(spec, formatter_spec, console, index, result, turn_result):
                 console, turn_result["stages"]["prepare"], collapse=["system"]
             )
             console.print(f"**assistant:**")
-            format_response(
-                console, turn_result["stages"]["extract"]
-            )
+            format_response(console, turn_result["stages"]["extract"])
             console.print()
 
         console.print()
@@ -114,18 +113,23 @@ def format_messages(console, messages, collapse: list[str] | None = None):
     Format a list of messages for display.
     Each message is a dictionary with 'role' and 'content' keys.
     """
-    for x in messages:
-        if x["role"] == "assistant" or x["role"] == "system":
-            console.print(f"**{x['role']}:**")
-            should_collapse = collapse and x["role"] in collapse and large_text_heuristic(x["content"])
+    for m in messages:
+        if m["role"] == "assistant" or m["role"] == "system":
+            console.print(f"**{m['role']}:**")
+            should_collapse = (
+                collapse
+                and m["role"] in collapse
+                and large_text_heuristic(m["content"])
+            )
             if should_collapse:
                 console.print("<details>\n<summary>Click to expand</summary>\n")
-            format_response(console, x["content"])
+            format_response(console, m["content"])
             if should_collapse:
                 console.print("\n</details>\n&nbsp;  \n")
-        elif x["role"] == "user":
-            console.print(f"**{x['role']}:** _{x['content']}_")
+        elif m["role"] == "user":
+            console.print(f"**{m['role']}:** _{m['content']}_")
         console.print()
+
 
 def format_response(console, value):
     if isinstance(value, dict):
@@ -135,6 +139,6 @@ def format_response(console, value):
     else:
         console.print(str(value))
 
+
 def large_text_heuristic(text: str) -> bool:
     return len(text.splitlines()) > 20 or len(text) > 200
-
