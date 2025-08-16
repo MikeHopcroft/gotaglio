@@ -4,7 +4,7 @@ from typing import Any
 
 from .helpers import IdShortener
 from .make_console import MakeConsole
-from .pipeline_spec import column_spec, get_turn_result, PipelineSpec
+from .pipeline_spec import column_spec, get_turn_result, PipelineSpec, uses_turns
 
 
 def summarize(
@@ -48,8 +48,8 @@ class Summarizer:
                 )
 
             def status_cell(result, turn_index):
-                x = get_turn_result(result, turn_index)
-                succeeded = x["succeeded"]
+                turn = get_turn_result(result, turn_index)
+                succeeded = turn["succeeded"]
                 return (
                     Text("COMPLETE", style="bold green")
                     if succeeded
@@ -90,11 +90,13 @@ class Summarizer:
                 if uses_turns(result):
                     for index, turn_result in enumerate(result["turns"]):
                         self.render_one_row(
-                            table, columns, result, index, turn_result # ["stages"]
+                            table, columns, result, index, turn_result
                         )
                 else:
                     # If there are no turns, we just render the result as a single row.
-                    self.render_one_row(table, columns, result, 0, result) # ["stages"])
+                    self.render_one_row(
+                        table, columns, result, 0, result
+                    )
 
             # Display the table and the totals.
             console.print(table)
@@ -139,10 +141,6 @@ def keywords_cell(result, turn_index):
         if "keywords" in result["case"]
         else ""
     )
-
-
-def uses_turns(result):
-    return "turns" in result["case"]
 
 
 keywords_column = column_spec(name="keywords", contents=keywords_cell)

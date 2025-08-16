@@ -2,7 +2,7 @@ from glom import glom
 
 from .helpers import IdShortener
 from .make_console import MakeConsole
-from .pipeline_spec import PipelineSpec
+from .pipeline_spec import PipelineSpec, uses_turns
 
 
 # If uuid_prefix is specified, format those cases whose uuids start with
@@ -18,8 +18,6 @@ def format(
         spec.formatter(console, runlog)
     else:
         formatter_spec = spec.formatter
-        mapping_spec = spec.mappings
-        using_turns = mapping_spec.turns is not None
 
         # TODO: model for saving state between formatter spec function calls
         # compress = (
@@ -36,6 +34,7 @@ def format(
         if len(results) == 0:
             console.print("No results.")
         else:
+            using_turns = uses_turns(results[0])
             # To make the summary more readable, create a short, unique prefix
             # for each case id.
             short_id = IdShortener([result["case"]["uuid"] for result in results])
@@ -45,7 +44,7 @@ def format(
                 if uuid_prefix and not result["case"]["uuid"].startswith(uuid_prefix):
                     continue
                 turn_count = (
-                    f" ({len(result['stages']['turns'])} turn{'s' if len(result['stages']['turns']) != 1 else ''})"
+                    f" ({len(result['turns'])} turn{'s' if len(result['turns']) != 1 else ''})"
                     if using_turns
                     else ""
                 )
@@ -72,7 +71,7 @@ def format(
                 if formatter_spec and formatter_spec.before_case:
                     formatter_spec.before_case(console, result)
 
-                turns = result["stages"]["turns"] if using_turns else [result]
+                turns = result["turns"] if using_turns else [result]
                 for index, turn_result in enumerate(turns):
                     format_one_turn(
                         spec, formatter_spec, console, index, result, turn_result

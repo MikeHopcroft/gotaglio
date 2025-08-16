@@ -106,7 +106,7 @@ class PipelineSpecs:
 
     def __len__(self):
         return len(self.pipelines)
-    
+
 
 def get_stages(context, turn_index=None):
     if "turns" in context["case"]:
@@ -132,3 +132,6 @@ def get_turn(context, turn_index=None):
         return context["case"]["turns"][turn_index]
     return context["case"]
 
+
+def uses_turns(result):
+    return "turns" in result["case"]
