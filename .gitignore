@@ -167,6 +167,7 @@ junk
 private
 logs
 .credentials.json
+models.json
 .credentials.yaml
 .credentials.yml
 models.json

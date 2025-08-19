@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
+import time
 from glom import glom
 import traceback
 from typing import Any, List
@@ -79,17 +80,49 @@ def check_for_cycles(dag, node, path):
 
 # TODO: use semaphore to limit concurrency at the task level. Plumb all the way through.
 async def run_task(dag, name, context):
+    # Resolve per-stage timing container directly in metadata for this run/turn
+    if "turns" in context:
+        # Multi-turn: current turn is the last one appended
+        meta_container = context["turns"][-1].setdefault("metadata", {}).setdefault(
+            "stages", {}
+        )
+    else:
+        # Single-turn: store under top-level metadata
+        meta_container = context.setdefault("metadata", {}).setdefault("stages", {})
+
+    # Wall-clock start
+    start_ts = datetime.now().timestamp()
+    start_iso = str(datetime.fromtimestamp(start_ts, timezone.utc))
+    # Monotonic start for elapsed computation
+    start_perf = time.perf_counter()
+    # Pre-populate stage metadata entry
+    meta_container.setdefault(name, {})
+    meta_container[name]["start"] = start_iso
     try:
         result = await dag[name]["function"](context)
+        succeeded = True
+        return (name, result)
     except Exception as e:
+        # Record exception on context and re-raise so upstream can handle
         context["exception"] = {
             "stage": name,
             "message": ExceptionContext.format_message(e),
             "traceback": traceback.format_exc(),
             "time": str(datetime.now(timezone.utc)),
         }
+        succeeded = False
         raise e
-    return (name, result)
+    finally:
+        # Wall-clock end
+        end_ts = datetime.now().timestamp()
+        end_iso = str(datetime.fromtimestamp(end_ts, timezone.utc))
+        # Monotonic elapsed
+        end_perf = time.perf_counter()
+        elapsed = str(timedelta(seconds=(end_perf - start_perf)))
+        meta = meta_container[name]
+        meta["end"] = end_iso
+        meta["elapsed"] = elapsed
+        meta["succeeded"] = succeeded
 
 
 def make_task(dag, name, context):
@@ -101,12 +134,18 @@ async def run_dag(dag_object, context):
     if turns is None:
         stages = {}
         context["stages"] = stages
+        # Ensure top-level metadata exists for single-turn timing
+        context.setdefault("metadata", {}).setdefault("stages", {})
         await run_dag_helper(dag_object, context, stages)
     else:
         context["turns"] = []
         for index in range(len(turns)):
             start = datetime.now().timestamp()
-            metadata = {"start": str(datetime.fromtimestamp(start, timezone.utc))}
+            metadata = {
+                "start": str(datetime.fromtimestamp(start, timezone.utc)),
+                # Initialize per-stage timing container inside turn metadata immediately
+                "stages": {},
+            }
             stages = {}
             turn = {
                 "succeeded": False,
@@ -122,9 +161,13 @@ async def run_dag(dag_object, context):
                     "traceback": traceback.format_exc(),
                     "time": str(datetime.now(timezone.utc)),
                 }
-                # Stop processing turns after an error.                
+                # Record end/elapsed even on error
+                end = datetime.now().timestamp()
+                elapsed = end - start
+                metadata["end"] = str(datetime.fromtimestamp(end, timezone.utc))
+                metadata["elapsed"] = str(timedelta(seconds=elapsed))
+                # Stop processing turns after an error.
                 return
-
             # Record the successful completion of this turn.
             end = datetime.now().timestamp()
             elapsed = end - start
@@ -163,7 +206,7 @@ async def run_dag_helper(dag_object, context, stages):
         for task in done:
             (name, result) = task.result()
 
-            # Record the result of this stage in the context.
+            # Record the result of this stage in the context (raw).
             if name in stages:
                 raise ValueError(
                     f"Internal error: node `stages.{name}` already in context"
