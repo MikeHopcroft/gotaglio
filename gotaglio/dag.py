@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from glom import glom
 import traceback
 from typing import Any, List
+import time
 
 from .exceptions import ExceptionContext
 
@@ -78,10 +79,28 @@ def check_for_cycles(dag, node, path):
 
 
 # TODO: use semaphore to limit concurrency at the task level. Plumb all the way through.
-async def run_task(dag, name, context):
+async def run_task(dag, name, context, stage_timing):
+    """
+    Execute a stage, recording timing under the provided stage_timing dict.
+
+    Timing contract:
+    - stage_timing[name] is created immediately with { start }
+    - on completion, we add end, elapsed, succeeded
+    - on error, succeeded is False and the exception propagates
+    """
+    start_monotonic = time.perf_counter()
+    start_dt = datetime.now(timezone.utc)
+
+    # Ensure the timing container entry exists from the start
+    stage_timing[name] = {"start": str(start_dt)}
+
+    succeeded = False
     try:
         result = await dag[name]["function"](context)
+        succeeded = True
+        return (name, result)
     except Exception as e:
+        # Attach exception at the top-level context for visibility
         context["exception"] = {
             "stage": name,
             "message": ExceptionContext.format_message(e),
@@ -89,19 +108,47 @@ async def run_task(dag, name, context):
             "time": str(datetime.now(timezone.utc)),
         }
         raise e
-    return (name, result)
+    finally:
+        end_monotonic = time.perf_counter()
+        end_dt = datetime.now(timezone.utc)
+        elapsed = end_monotonic - start_monotonic
+        # Update the timing info for this stage
+        md = stage_timing.get(name, {})
+        md.update(
+            {
+                "end": str(end_dt),
+                "elapsed": str(timedelta(seconds=elapsed)),
+                "succeeded": succeeded,
+            }
+        )
+        stage_timing[name] = md
 
 
-def make_task(dag, name, context):
-    return asyncio.create_task(run_task(dag, name, context))
+def make_task(dag, name, context, stage_timing):
+    return asyncio.create_task(run_task(dag, name, context, stage_timing))
 
 
 async def run_dag(dag_object, context: dict[str, Any], turn_index: int | None = None):
     turns = glom(context, "case.turns", default=None)
     if turns is None:
-        stages = {}
+        # Single-turn run: initialize top-level metadata and timing container
+        stages: dict[str, Any] = {}
         context["stages"] = stages
-        await run_dag_helper(dag_object, context, stages)
+
+        start = datetime.now().timestamp()
+        metadata = {
+            "start": str(datetime.fromtimestamp(start, timezone.utc)),
+            "stages": {},
+        }
+        context["metadata"] = metadata
+
+        await run_dag_helper(dag_object, context, stages, metadata["stages"])
+
+        # Record end and elapsed for the overall run
+        end = datetime.now().timestamp()
+        elapsed = end - start
+        metadata["end"] = str(datetime.fromtimestamp(end, timezone.utc))
+        metadata["elapsed"] = str(timedelta(seconds=elapsed))
     else:
         turn_count = len(turns)
         context["turns"] = []
@@ -113,7 +160,10 @@ async def run_dag(dag_object, context: dict[str, Any], turn_index: int | None = 
 
         for index in range(turn_count):
             start = datetime.now().timestamp()
-            metadata = {"start": str(datetime.fromtimestamp(start, timezone.utc))}
+            metadata = {
+                "start": str(datetime.fromtimestamp(start, timezone.utc)),
+                "stages": {},
+            }
             stages = {}
             turn = {
                 "succeeded": False,
@@ -124,7 +174,7 @@ async def run_dag(dag_object, context: dict[str, Any], turn_index: int | None = 
 
             if turn_index is None or turn_index == index:
                 try:
-                    await run_dag_helper(dag_object, context, stages)
+                    await run_dag_helper(dag_object, context, stages, metadata["stages"])
                 except Exception as e:
                     turn["exception"] = {
                         "message": ExceptionContext.format_message(e),
@@ -143,7 +193,7 @@ async def run_dag(dag_object, context: dict[str, Any], turn_index: int | None = 
             metadata["elapsed"] = str(timedelta(seconds=elapsed))
 
 
-async def run_dag_helper(dag_object, context, stages):
+async def run_dag_helper(dag_object, context, stages, stage_timing):
     dag = dag_object.dag
 
     # DESIGN NOTE: the dict of unfulfilled dependencies is stored per-run,
@@ -163,7 +213,7 @@ async def run_dag_helper(dag_object, context, stages):
     # cleanup after exceptions.
 
     # Create a list of tasks for the ready nodes
-    tasks = [make_task(dag, name, context) for name in ready]
+    tasks = [make_task(dag, name, context, stage_timing) for name in ready]
 
     while tasks:
         # Wait for any of the tasks to complete
@@ -186,7 +236,7 @@ async def run_dag_helper(dag_object, context, stages):
                 dependencies[output].remove(name)
                 if not dependencies[output]:
                     waiting.remove(output)
-                    tasks.add(make_task(dag, output, context))
+                    tasks.add(make_task(dag, output, context, stage_timing))
 
     if waiting:
         raise ValueError("Internal error: some nodes are still waiting to run")

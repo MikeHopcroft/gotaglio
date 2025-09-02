@@ -45,8 +45,9 @@ class PipelineSpec(BaseModel):
     create_dag: Callable[[str, dict[str, Any], Any], Any] = Field(
         ..., description="Function to create the DAG"
     )
-    expected: Callable[[dict[str, Any]], Any] = Field(
-        ..., description="Function that returns the expected result of a turn."
+    expected: Callable[[dict[str, Any]], Any] | None = Field(
+        default=None,
+        description="Function that returns the expected result of a turn.",
     )
     formatter: FormatterSpec | Callable | None = Field(
         default=None, description="Optional formatter spec or function"

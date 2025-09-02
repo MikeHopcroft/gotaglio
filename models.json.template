@@ -23,5 +23,14 @@
     "deployment": "gpt-4o-2024-11-20",
     "key": "From .credentials.json",
     "api": "2024-08-01-preview"
+  },
+  {
+    "name": "gpt5",
+    "description": "GPT-5 deployment",
+    "type": "AZURE_OPEN_AI_5",
+    "endpoint": <ENDPOINT>,
+    "deployment": "gpt-5-2025-xx-xx",
+    "key": "From .credentials.json",
+    "api": "2025-01-01-preview"
   }
 ]

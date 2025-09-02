@@ -29,3 +29,8 @@ class AppConfiguration:
         return str(self._config)
 
 app_configuration = AppConfiguration(app_configuration_values)
+
+# Model capability allowlists
+# Models whose type is in this set are considered capable of ingesting direct audio input
+# (e.g., raw audio bytes or an audio file path on the case).
+AUDIO_INPUT_MODEL_TYPES = {"AZURE_OPEN_AI_REALTIME"}

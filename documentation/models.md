@@ -9,9 +9,10 @@ TODO: coming soon.
 
 Models can be configured in `models.json` in the current working directory. The repo contains a [models.json.template](../models.json.template) file that shows the parameters for each available model API.
 
-GoTaglio currently supports the following two APIs:
+GoTaglio currently supports the following model API types:
 * AZURE_AI - for access to most models in Azure.
-* AZURE_OPEN_AI - for access to OpenAI models hosted in Azure.
+* AZURE_OPEN_AI - for access to OpenAI models hosted in Azure (GPT-3.5/4 family).
+* AZURE_OPEN_AI_5 - for access to Azure OpenAI GPT-5 family models.
 
 The `models.json` file is structured as an array of model definitions. Here's an example:
 
@@ -41,9 +42,44 @@ The `models.json` file is structured as an array of model definitions. Here's an
     "deployment": "gpt-4o-2024-11-20",
     "key": "From .credentials.json",
     "api": "2024-08-01-preview"
+  },
+  {
+    "name": "gpt5",
+    "description": "GPT-5 deployment",
+    "type": "AZURE_OPEN_AI_5",
+    "endpoint": <ENDPOINT>,
+    "deployment": "gpt-5-2025-xx-xx",
+    "key": "From .credentials.json",
+    "api": "2025-01-01-preview"
   }
 ]
 ~~~
+
+### GPT-5 specifics (AZURE_OPEN_AI_5)
+
+When using the GPT-5 family via `AZURE_OPEN_AI_5`:
+* The token limit parameter is `max_completion_tokens` (not `max_tokens`).
+* The parameters `temperature` and `top_p` are not supported and should be omitted from runtime settings.
+* Other supported settings remain the same (for example: `frequency_penalty`, `presence_penalty`).
+
+If you define per-pipeline model settings (e.g., in a pipeline config), prefer:
+
+~~~json
+{
+  "infer": {
+    "model": {
+      "name": "gpt5",
+      "settings": {
+        "max_completion_tokens": 800,
+        "frequency_penalty": 0,
+        "presence_penalty": 0
+      }
+    }
+  }
+}
+~~~
+
+For backward compatibility, GoTaglio will also honor `max_tokens` if present, but `max_completion_tokens` takes precedence when using GPT-5.
 
 ## Supplying Credentials
 
@@ -53,7 +89,8 @@ GoTaglio looks for a file called `.credentials.json` in the current working dire
 {
   "phi3": <PHI3 KEY>,
   "gpt3.5": <GPT 3.5 KEY>,
-  "gpt4o": <GPT 4o KEY>
+  "gpt4o": <GPT 4o KEY>,
+  "gpt5": <GPT 5 KEY>
 }
 ~~~
 

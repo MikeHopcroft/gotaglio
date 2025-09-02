@@ -40,13 +40,13 @@ default_config = {
     "infer": {
         "model": {
             "name": Prompt("Model name to use for inference stage"),
-            "settings": {
-                "max_tokens": 800,
-                "temperature": 0.7,
-                "top_p": 0.95,
-                "frequency_penalty": 0,
-                "presence_penalty": 0,
-            },
+      "settings": {
+        "max_tokens": 800,
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+      },
         }
     },
 }
@@ -59,6 +59,8 @@ Here are a few things to notice in the configuration:
 * The `Internal` marker designates a value that will be added by the runtime, usually during pipeline initialization in the `Pipeline.stages()` function.
 
 The pipeline configuration will be provided to the stage functions at runtime and it will be serialized into the run log file to facilitate replication of the experiment.
+
+Note on GPT-5 (AZURE_OPEN_AI_5): When targeting GPT-5 models, prefer `max_completion_tokens` over `max_tokens`, and omit `temperature` and `top_p` as these are not supported by GPT-5.
 
 The pipeline configuration is defined in the `__init__` method of a class the derives from `Pipeline`:
 

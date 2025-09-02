@@ -1,0 +1,3 @@
+# Direct file path example using a sample WAV audio
+- uuid: 00000000-0000-0000-0000-000000000002
+  audio: "data/sample.wav"

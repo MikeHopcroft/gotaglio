@@ -204,7 +204,11 @@ def stages(name, config, registry):
     # Stage 2: Invoke the model to generate a response
     async def infer(context):
         stages = get_stages(context)
-        return await model.infer(stages["prepare"], context)
+        # Pass per-pipeline model settings to the model via context
+        model_settings = glom(config, "infer.model.settings", default={})
+        ctx = dict(context)
+        ctx["model_settings"] = model_settings
+        return await model.infer(stages["prepare"], ctx)
 
     # Stage 3: Attempt to extract a numerical answer from the model response.
     # Note that this method will raise an exception if the response is not

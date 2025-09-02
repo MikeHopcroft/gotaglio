@@ -167,9 +167,14 @@ junk
 private
 logs
 .credentials.json
+credentials.env
+models.json
 .credentials.yaml
 .credentials.yml
 models.json
 models.yaml
 models.yml
 out.md
+
+# Other files to ignore
+.DS_Store
