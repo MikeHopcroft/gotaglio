@@ -14,6 +14,21 @@
       ]
     },
     {
+      "name": "serve",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "samples/menu/menu.py",
+      "console": "integratedTerminal",
+      "args": [
+        "serve",
+        "menu",
+        "prepare.template=samples/menu/data/template.txt",
+        "infer.model.name=perfect",
+        "--port",
+        "3000",
+      ]
+    },
+    {
       "name": "format",
       "type": "debugpy",
       "request": "launch",

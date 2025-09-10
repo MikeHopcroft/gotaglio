@@ -12,6 +12,7 @@ from .subcommands.history_cmd import show_history
 from .subcommands.list_models_cmd import list_models
 from .subcommands.list_pipelines_cmd import list_pipelines
 from .subcommands.run_cmd import rerun_command, run_command
+from .subcommands.serve_cmd import serve_command
 from .subcommands.summarize_cmd import summarize_command
 
 
@@ -61,6 +62,18 @@ def main(pipelines: list[PipelineSpec]):
         "prefix_b", type=str, help="Filename prefix for run log B"
     )
 
+    # 'format' subcommand
+    format_parser = subparsers.add_parser("format", help="Pretty print a run")
+    format_parser.add_argument(
+        "prefix", type=str, help="Filename prefix for run log (or 'latest')"
+    )
+    format_parser.add_argument(
+        "case_id_prefix",
+        type=str,
+        nargs="?",
+        help="Optional case id prefix to show a single case",
+    )
+
     # 'help' subcommand
     help_parser = subparsers.add_parser("help", help="Show help for gotaglio commands")
     help_parser.add_argument(
@@ -107,16 +120,21 @@ def main(pipelines: list[PipelineSpec]):
         "key_values", nargs="*", help="key=value arguments to configure pipeline"
     )
 
-    # 'format' subcommand
-    format_parser = subparsers.add_parser("format", help="Pretty print a run")
-    format_parser.add_argument(
-        "prefix", type=str, help="Filename prefix for run log (or 'latest')"
+    # 'serve' subcommand
+    serve_parser = subparsers.add_parser("serve", help="Serve a named pipeline")
+    serve_parser.add_argument(
+        "pipeline", type=str, help="The name of the pipeline to serve"
     )
-    format_parser.add_argument(
-        "case_id_prefix",
-        type=str,
-        nargs="?",
-        help="Optional case id prefix to show a single case",
+    serve_parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to serve on localhost (default: 8000)",
+    )
+    # key-value arguments are used to override the default pipeline configuration.
+    serve_parser.add_argument(
+        "key_values", nargs="*", help="key=value arguments to configure pipeline"
     )
 
     # 'summarize' subcommand
@@ -136,6 +154,9 @@ def main(pipelines: list[PipelineSpec]):
         elif args.command == "compare":
             compare_command(pipeline_specs, args)
 
+        elif args.command == "format":
+            format_command(pipeline_specs, args)
+
         elif args.command == "help":
             show_help(parser, args)
 
@@ -154,8 +175,8 @@ def main(pipelines: list[PipelineSpec]):
         elif args.command == "run":
             run_command(pipeline_specs, args)
 
-        elif args.command == "format":
-            format_command(pipeline_specs, args)
+        elif args.command == "serve":
+            serve_command(pipeline_specs, args)
 
         elif args.command == "summarize":
             summarize_command(pipeline_specs, args)
