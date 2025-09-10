@@ -1,0 +1,75 @@
+### Test Gotaglio API Endpoints
+
+# Base URL - adjust port if needed
+@baseUrl = http://localhost:3000
+
+### Test root endpoint
+GET {{baseUrl}}/
+
+###
+
+### Test infer endpoint with mock data
+POST {{baseUrl}}/api/infer
+Content-Type: application/json
+
+{
+  "case": {
+    "id": "test-case-123",
+    "description": "Test case for inference",
+    "data": "sample input data"
+  },
+  "turn": 1
+}
+
+###
+
+### Test infer endpoint with different turn
+POST {{baseUrl}}/api/infer
+Content-Type: application/json
+
+{
+  "case": {
+    "id": "test-case-456",
+    "description": "Another test case",
+    "metadata": {
+      "source": "test"
+    }
+  },
+  "turn": 3
+}
+
+###
+
+### Test validate endpoint with valid data
+POST {{baseUrl}}/api/validate
+Content-Type: application/json
+
+{
+  "case": {
+    "id": "validation-test",
+    "type": "test"
+  },
+  "some_field": "some_value",
+  "nested": {
+    "property": "value"
+  }
+}
+
+###
+
+### Test validate endpoint with missing case field (should return error)
+POST {{baseUrl}}/api/validate
+Content-Type: application/json
+
+{
+  "some_field": "some_value",
+  "no_case_field": true
+}
+
+###
+
+### Test validate endpoint with empty data (should return error)
+POST {{baseUrl}}/api/validate
+Content-Type: application/json
+
+{}

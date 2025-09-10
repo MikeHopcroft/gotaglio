@@ -8,6 +8,7 @@ from .constants import app_configuration_values
 from .director import Director
 from .format import format
 from .pipeline_spec import PipelineSpec, PipelineSpecs, PipelineSpecs
+from .serve import serve
 from .shared import (
     apply_patch_in_place,
     read_json_file,
@@ -113,6 +114,19 @@ class Gotaglio:
 
     def save(self, runlog, filename: str | None = None, chatty: bool = False):
         write_log_file(runlog, filename, chatty)
+
+    def serve(
+        self,
+        pipeline_name: str,
+        port: int = 8000
+    ):
+        pipeline_spec = self._pipeline_specs.get(pipeline_name)
+        director = Director(pipeline_spec, None, {}, 1)
+        print(f"Serving pipeline '{pipeline_name}' on port {port}")
+        
+        # Start service
+        serve(pipeline_spec, director, port)
+
 
     def summarize(self, runlog_or_prefix):
         runlog = runlog_from_runlog_or_prefix(runlog_or_prefix)

@@ -5,6 +5,7 @@ from typing import Any, cast
 from ..constants import app_configuration
 from ..director import Director
 from ..pipeline_spec import PipelineSpecs
+from ..serve import serve
 from ..shared import (
     log_file_name_from_prefix,
     parse_key_value_args,
@@ -31,4 +32,7 @@ def serve_command(pipeline_specs: PipelineSpecs, args):
     print("\n".join(lines))
     print(f"  concurrancy: {concurrency}")
     print("")
+
+    # Start service
+    serve(pipeline_spec, director, port)
 
