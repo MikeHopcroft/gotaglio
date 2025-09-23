@@ -15,6 +15,37 @@ from .pipeline_spec import PipelineSpec
 from .registry import Registry
 from .shared import write_json_file
 
+# Director responsibilities:
+#  - build pipeline from spec. This causes the dag to get built inside the pipeline.
+#  - record metadata about the run (start time, command line, sha, edits, etc)
+#  - manage concurrency in processing a list of cases
+#  - calls out to global process_one_case() function to process each case
+#  - ensure routing of progress() and completed() callbacks
+#  - diff configs
+#
+# Global process_one_case() responsibilities:
+#  - call completed() callback when done
+#  - call run_dag()
+#
+# run_dag() responsibilities:
+#  - run the dag for all turns
+#
+# PROPOSAL: partial_run_dag() takes dag0, which is used for all but the
+# final turn, and dag1 which is used for the final turn. Helper function takes
+# a complete DAG and replaces stage coroutines with nop() coroutines
+# as needed to create dag0 and dag1. Now type of turn can be number instead
+# of number | None, since it must always be specified, even for cases that
+# don't use turns.
+#
+# ASSUMPTION: rerunning all of the n-1 prepare steps is preferred to just
+# running the nth prepare step in isolation.
+#
+# BENEFIT: could we remove concept of isolated turns? How would prepare know?
+# Could have pipeline's preview() method set LinkedTurns (or whatever other 
+# mechanism it wants) to indicate that prepare should be using expected carts. 
+#
+# Could also supply a different coroutine for the infer() steps before the
+# final turn.
 
 class Director:
     def __init__(
@@ -104,7 +135,8 @@ class Director:
         completed: Callable | None = None,
         turn: int | None = None,
     ):
-        return await process_one_case(case, self._dag, completed, turn)
+        result = await process_one_case(case, self._dag, completed, turn)
+        return result
 
     def diff_configs(self):
         return self._pipeline.diff_configs()

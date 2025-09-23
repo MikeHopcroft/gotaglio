@@ -143,7 +143,7 @@ def stages(name, config, registry):
     # to the `run` sub-command.
     #
     # context["stages"][name] has the return value for stage `name`. Note
-    # that context["stages"][name] will only be defined if after the stage
+    # that context["stages"][name] will only be defined if the stage
     # has successfully run to conclusion without raising an exception.
     #
     # Note that a stage function will only be invoked if all of its previous or
@@ -188,6 +188,9 @@ def stages(name, config, registry):
             context["case"]["cart"]
             if i == 0
             else (
+                # Why doesn't attempting to access context["isolated_turns"]
+                # risk raising a KeyError? I am assuming that "isolated_turns"
+                # only exists when True is its intended value.
                 context["turns"][i - 1]["stages"]["extract"]
                 if linked_turns and not context["isolated_turns"]
                 else context["case"]["turns"][i - 1]["expected"]

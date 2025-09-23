@@ -13,12 +13,64 @@ POST {{baseUrl}}/api/infer
 Content-Type: application/json
 
 {
-  "case": {
-    "id": "test-case-123",
-    "description": "Test case for inference",
-    "data": "sample input data"
-  },
-  "turn": 1
+  "case":
+    {
+      "uuid": "1231c4df-bba6-42cd-a3ae-24f31d5503fa",
+      "keywords": [
+        "add",
+        "remove",
+        "multi-step"
+      ],
+      "cart": {
+        "items": []
+      },
+      "turns": [
+        {
+          "user": "I'll have a grande vanilla latte",
+          "expected": {
+            "items": [
+              {
+                "name": "latte",
+                "quantity": 1,
+                "size": "grande",
+                "options": [
+                  {
+                    "name": "vanilla syrup",
+                    "amount": "regular"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "user": "Actually make that nonfat and decaf",
+          "expected": {
+            "items": [
+              {
+                "name": "latte",
+                "quantity": 1,
+                "size": "grande",
+                "options": [
+                  {
+                    "name": "vanilla syrup"
+                  },
+                  {
+                    "name": "decaf",
+                    "quantity": 1
+                  },
+                  {
+                    "name": "nonfat milk",
+                    "quantity": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+  "turn": 0
 }
 
 ###

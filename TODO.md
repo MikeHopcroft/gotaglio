@@ -1,7 +1,13 @@
 # TODO
 
+* Ability to run a dag to a certain stage
+  * This would allow turns 0..index-1 to run only prepare and then let the last turn run up to, say, extract.
+  * This would allow us to avoid running validate()
+  * ALTERNATIVE: pass in stages dictionary with nop() functions
+* Ability to run a specified turn
+* Ability to extract result
 * # TODO: do we really need process_one_case() anymore?
-* Refactor director to better support preview() and validate()
+* Refactor director to better support preview()/guess()/complete() and validate()
   * Move cases out of constructor
   * typing annotations for cases
 * Test suite and test case validation

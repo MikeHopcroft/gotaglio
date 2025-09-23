@@ -127,8 +127,9 @@ async def run_task(dag, name, context, stages, timing):
     return name
 
 
-async def run_dag(dag_object, case, turn_index: int | None = None) -> dict[str, Any]:
-
+async def run_dag(
+    dag_object: Dag, case, turn_index: int | None = None
+) -> dict[str, Any]:
     # DESIGN NOTE: for readability, set `succeeded` here to keep it as
     # the first property. Contract is that `succeeded` indicates that
     # a run has succeded at some point. Failed runs and runs in progress
@@ -186,6 +187,70 @@ async def run_dag(dag_object, case, turn_index: int | None = None) -> dict[str, 
     return context
 
 
+# TODO: Finish up this work-in-progress prototype of a successor to run_dag().
+async def partial_run_dag(
+    dag0: Dag, dag1: Dag, case: dict[str, Any], turn_index: int
+) -> dict[str, Any]:
+    # DESIGN NOTE: for readability, set `succeeded` here to keep it as
+    # the first property. Contract is that `succeeded` indicates that
+    # a run has succeded at some point. Failed runs and runs in progress
+    # will both have `succeeded` set to False.
+    succeeded = False
+    context = {
+        "succeeded": succeeded,
+        # Also add placeholders for timing information that will be filled in
+        # later. Risk here is that class Timer could change the names of these
+        # fields.
+        "metadata": {
+            "start": "",
+            "end": "",
+            "elapsed": "",
+        },
+        "case": case,
+    }
+
+    turns = case.get("turns", None)
+    timer = Timer()
+
+    try:
+        if turns is None:
+            if turn_index != 0:
+                raise IndexError("Turn index must be zero for cases without turns.")
+            timing = {}
+            context["metadata"]["stages"] = timing
+            stages = {}
+            context["stages"] = stages
+            await run_dag_helper(dag1, context, stages, timing)
+            succeeded = True
+        else:
+            turn_count = len(turns)
+            context["turns"] = []
+
+            if turn_index is not None:
+                if turn_index >= len(turns) or turn_index < 0:
+                    raise IndexError(
+                        f"Turn index {turn_index} is out of range for available turns."
+                    )
+                turn_count = turn_index + 1
+
+            for index in range(turn_count):
+                dag = dag0 if index < turn_index else dag1
+                await run_turn(index, dag, context, turn_index)
+            succeeded = True
+    except Exception as e:
+        context["exception"] = {
+            "message": ExceptionContext.format_message(e),
+            "traceback": traceback.format_exc(),
+            "time": str(datetime.now(timezone.utc)),
+        }
+
+    finally:
+        context["succeeded"] = succeeded
+        context["metadata"].update(timer.get_times())
+
+    return context
+
+
 async def run_turn(
     index: int, dag_object, context: dict[str, Any], turn_index: int | None
 ):
@@ -219,6 +284,7 @@ async def run_turn(
     succeeded = False
 
     try:
+        # Skip running turn if turn_index limits us to a specific turn.
         if turn_index is None or turn_index == index:
             await run_dag_helper(dag_object, context, stages, timing)
             succeeded = True

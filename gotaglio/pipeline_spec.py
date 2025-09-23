@@ -55,6 +55,10 @@ class PipelineSpec(BaseModel):
         default=lambda result: False,
         description="Function to determine if the summarization passed",
     )
+    partial: Callable[[dict[str, Any], int], Any] = Field(
+        default=lambda result, turn_index: None,
+        description="Function that returns a provisional result of a turn.",
+    )
     summarizer: SummarizerSpec | Callable | None = Field(
         default=None, description="Optional summarizer spec or function"
     )

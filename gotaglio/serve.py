@@ -37,11 +37,12 @@ async def infer(request: InferRequest):
     Infer API that takes a test case and turn number.
     Currently returns a mock response.
     """
+    result = await _director.process_one_case(request.case, turn=request.turn)
     return {
         "message": "Mock inference response",
         "case_id": request.case.get("id", "unknown"),
         "turn": request.turn,
-        "result": "This is a mock inference result"
+        "result": result
     }
 
 
