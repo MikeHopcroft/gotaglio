@@ -3,7 +3,7 @@ from glom import glom
 import pytest
 from typing import Any
 
-from gotaglio.dag import Dag
+from gotaglio.dag import Dag, StageCoroutine
 from gotaglio.gotag import Gotaglio
 from gotaglio.pipeline_spec import (
     get_result,
@@ -12,18 +12,18 @@ from gotaglio.pipeline_spec import (
 
 
 def create_dag(name, config, registry):
-    async def stage1(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def stage1(context: dict[str, Any], turn_index: int | None, isolated_turn: bool)  -> dict[str, Any]:
         return {"result1": 1 + glom(config, "stage1.initial")}
 
-    async def stage2(context: dict[str, Any], turn_index: int, isolated: bool):
-        result = get_result(context)
+    async def stage2(context: dict[str, Any], turn_index: int | None, isolated_turn: bool)  -> dict[str, Any]:
+        result = get_result(context, turn_index)
         return {"result2": 10 + glom(result, "stages.stage1.result1")}
 
-    async def stage3(context: dict[str, Any], turn_index: int, isolated: bool):
-        result = get_result(context)
+    async def stage3(context: dict[str, Any], turn_index: int | None, isolated_turn: bool)  -> dict[str, Any]:
+        result = get_result(context, turn_index)
         return {"result3": 100 + glom(result, "stages.stage2.result2")}
 
-    stages = {
+    stages: dict[str, StageCoroutine] = {
         "stage1": stage1,
         "stage2": stage2,
         "stage3": stage3,
@@ -41,7 +41,7 @@ def test_single_turn_pipeline():
     Verifies that a single-turn pipeline can be created and run without crashing.
     """
 
-    def passed_predicate(context):
+    def passed_predicate(context: dict[str, Any], turn_index: int | None = None):
         # TODO: is this API right? It is for the case, not for the turn.
         return glom(context, "stages.stage3.result3") == glom(context, "case.answer")
 
@@ -83,7 +83,7 @@ def test_multi_turn_pipeline():
     Verifies that a multi-turn pipeline can be created and run without crashing.
     """
 
-    def passed_predicate(context):
+    def passed_predicate(context, turn_index: int | None = None):
         # TODO: is this API right? It is for the case, not for the turn.
         return glom(context, "turns.0.stages.stage3.result3") == glom(
             context, "case.turns.0.answer"

@@ -2,6 +2,7 @@
 
 gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.name=fails
 
+* process_all_cases() should use Timer
 * Reevaluate convenience functions like get_turn()
   * Should we always require turn_index when we have turns?
   * Should we have a get_current_turn() that doesn't take an index?

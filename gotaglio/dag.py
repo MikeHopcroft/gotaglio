@@ -7,7 +7,7 @@ from typing import Any, Awaitable, Callable, List
 
 from .exceptions import ExceptionContext
 
-StageCoroutine = Callable[[dict[str, Any], int, bool], Awaitable[dict[str, Any]]]
+StageCoroutine = Callable[[dict[str, Any], int | None, bool], Awaitable[dict[str, Any]]]
 
 @dataclass
 class DagNodeSpec:
@@ -124,7 +124,7 @@ def make_task(
     stages: dict[str, Any],
     timing: dict[str, Any],
     context: dict[str, Any],
-    turn_index: int,
+    turn_index: int | None,
     isolated: bool,
 ):
     return asyncio.create_task(
@@ -139,7 +139,7 @@ async def run_task(
     stages: dict[str, Any],
     timing: dict[str, Any],
     context: dict[str, Any],
-    turn_index: int,
+    turn_index: int | None,
     isolated: bool,
 ):
     if name in stages:
@@ -203,7 +203,7 @@ async def run_dag(
             context["metadata"]["stages"] = timing
             stages = {}
             context["stages"] = stages
-            await run_dag_helper(dag_object, stages, timing, context, 0, False)
+            await run_dag_helper(dag_object, stages, timing, context, None, False)
             succeeded = True
         else:
             turn_count = len(turns)
@@ -288,7 +288,7 @@ async def run_dag_helper(
     stages: dict[str, Any],
     timing: dict[str, Any],
     context: dict[str, Any],
-    turn_index: int,
+    turn_index: int | None,
     isolated: bool,
 ):
     dag = dag_object.dag
