@@ -90,7 +90,7 @@ class Summarizer:
                         self.render_one_row(table, columns, result, index, turn_result)
                 else:
                     # If there are no turns, we just render the result as a single row.
-                    self.render_one_row(table, columns, result, 0, result)
+                    self.render_one_row(table, columns, result, None, result)
 
             # Display the table and the totals.
             console.print(table)
@@ -111,9 +111,9 @@ class Summarizer:
                 )
             console.print()
 
-    def render_one_row(self, table, columns, result, turn_index, turn_result):
+    def render_one_row(self, table, columns, result, turn_index: int | None, turn_result):
         succeeded = turn_result["succeeded"]
-        passed = self._passed_predicate(result)
+        passed = self._passed_predicate(result, turn_index)
 
         self.total_count += 1
         if succeeded:

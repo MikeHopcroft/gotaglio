@@ -4,6 +4,7 @@ from typing import Any, Callable
 
 from .dag import Dag
 
+
 class FormatterSpec(BaseModel):
     before_case: Callable[[Console, dict[str, Any]], None] | None = Field(
         default=None, description="Function to generate contents before each case"
@@ -52,8 +53,8 @@ class PipelineSpec(BaseModel):
     formatter: FormatterSpec | Callable | None = Field(
         default=None, description="Optional formatter spec or function"
     )
-    passed_predicate: Callable[[dict[str, Any]], bool] = Field(
-        default=lambda result: False,
+    passed_predicate: Callable[[dict[str, Any], int | None], bool] = Field(
+        default=lambda result, turn_index: False,
         description="Function to determine if the summarization passed",
     )
     partial: Callable[[dict[str, Any], int], Any] = Field(
@@ -90,7 +91,7 @@ class PipelineSpecs:
 
 
 # Used by stage functions to get inputs
-def get_stages(context, turn_index=None):
+def get_stages(context, turn_index: int | None = None):
     """
     Returns the portion of the context that corresponds to the pipeline
     `stages` results for either the most recently processed turn or a
@@ -100,7 +101,7 @@ def get_stages(context, turn_index=None):
 
 
 # Used by summarize() to get `succeeded`
-def get_result(context, turn_index=None):
+def get_result(context, turn_index: int | None = None):
     """
     Returns the portion of the context that corresponds to the
     results of a test run, for either the most recently processed
@@ -109,13 +110,17 @@ def get_result(context, turn_index=None):
     """
     if "turns" in context["case"]:
         if turn_index is None:
-            turn_index = len(context["turns"]) - 1
+            raise IndexError("turn_index must be specified for cases with turns")
+            # turn_index = len(context["turns"]) - 1
         return context["turns"][turn_index]
-    return context
+    else:
+        if turn_index is not None:
+            raise IndexError("turn_index cannot be specified for cases without turns")
+        return context
 
 
 # Used by stage functions and model mocks to get inputs.
-def get_turn(context, turn_index=None):
+def get_turn(context, turn_index: int | None = None):
     """
     Returns the portion of the context's test case that defines a
     turn. If the case uses turns, it will return the last turn if
@@ -125,19 +130,15 @@ def get_turn(context, turn_index=None):
     """
     if "turns" in context["case"]:
         if turn_index is None:
+            # raise IndexError("turn_index must be specified for cases with turns")
+            # DESIGN NOTE: need to compute turn_index if not specified, because
+            # mock models don't have access to the turn_index parameter.
             turn_index = len(context["turns"]) - 1
         return context["case"]["turns"][turn_index]
-    return context["case"]
-
-
-def get_turn_index(context):
-    """
-    Returns the index of the current turn in the context, or None
-    if the case does not use turns.
-    """
-    if "turns" in context["case"]:
-        return len(context["turns"]) - 1
-    return None
+    else:
+        if turn_index is not None:
+            raise IndexError("turn_index cannot be specified for cases without turns")
+        return context["case"]
 
 
 def uses_turns(result):

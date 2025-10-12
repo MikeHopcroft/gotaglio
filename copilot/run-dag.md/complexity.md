@@ -1,4 +1,4 @@
-I don't like the complexity of the run_dag() function (and the in-progress prototype of its successor, partial_run_dag()). The function executes an directed acyclic graph of asynchronous coroutines, while logging return values and errors.
+I don't like the complexity of the run_dag() function (and the in-progress prototype of its successor, partial_run_dag()). The function executes a directed acyclic graph of asynchronous coroutines, while logging return values and errors.
 
 The code is complex because it handles a number of co-mingled concerns:
 - Orchestrating the execution of co-routines and logging results and errors over a single DAG.

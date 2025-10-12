@@ -5,6 +5,27 @@ from .models import Model
 from .pipeline_spec import get_turn
 
 
+class Fails(Model):
+    """
+    A mock model class that cycles through
+      1. returning the expected answer
+      2. returning "hello world"
+      3. raising an exception
+    """
+
+    def __init__(
+        self, registry, expected: Callable[[dict[str, Any]], Any], configuration
+    ):
+        self._expected = expected
+        registry.register_model("fails", self)
+
+    async def infer(self, messages, context: dict[str, Any] | None = None):
+        raise Exception("Fails model failed")
+
+    def metadata(self):
+        return {}
+
+
 class Flakey(Model):
     """
     A mock model class that cycles through

@@ -37,10 +37,12 @@ async def infer(request: InferRequest):
     Infer API that takes a test case and turn number.
     Currently returns a mock response.
     """
+    if _director is None:
+        raise HTTPException(status_code=500, detail="Director not initialized")
     result = await _director.process_one_case(request.case, turn=request.turn)
     return {
         "message": "Mock inference response",
-        "case_id": request.case.get("id", "unknown"),
+        "case_id": request.case.get("uuid", "unknown"),
         "turn": request.turn,
         "result": result
     }

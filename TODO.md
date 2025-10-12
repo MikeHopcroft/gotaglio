@@ -1,5 +1,18 @@
 # TODO
 
+gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.name=fails
+
+* Reevaluate convenience functions like get_turn()
+  * Should we always require turn_index when we have turns?
+  * Should we have a get_current_turn() that doesn't take an index?
+  * Issue is that source turn 5 might be in result turn 0 when turn_index==5 and isolated==True
+* @app.post("/api/infer") returns with succeeded == True even if exception raised
+* Model registration may be preventing tests from exiting cleanly
+  * Should only create a model when needed
+  * Should close clients when finished
+* Massive concurrancy
+  * Lift semaphore out of Director to allow matrix runs.
+  * Or add matrix runs to Director.
 * Ability to run a dag to a certain stage
   * This would allow turns 0..index-1 to run only prepare and then let the last turn run up to, say, extract.
   * This would allow us to avoid running validate()

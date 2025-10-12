@@ -1,4 +1,5 @@
 from glom import glom
+from typing import Any
 
 from .helpers import IdShortener
 from .make_console import MakeConsole
@@ -10,7 +11,7 @@ from .pipeline_spec import PipelineSpec, uses_turns
 # uuid_prefix. Otherwise, format all cases.
 def format(
     spec: PipelineSpec,
-    runlog: dict[str, any],
+    runlog: dict[str, Any],
     uuid_prefix: str | None = None,
 ) -> None:
     console_buffer = MakeConsole()
@@ -65,7 +66,7 @@ def format(
                         ]
                     )
                     if using_turns
-                    else spec.passed_predicate(result)
+                    else spec.passed_predicate(result, None)
                 )
 
                 console.print(
@@ -86,7 +87,7 @@ def format(
                     )
 
                 if formatter_spec and formatter_spec.after_case:
-                    console.print(formatter_spec.after_case(result))
+                    console.print(formatter_spec.after_case(console, result))
     console_buffer.render()
 
 
@@ -142,7 +143,7 @@ def format_messages(console, messages, collapse: list[str] | None = None):
 def format_response(console, value):
     if isinstance(value, dict):
         console.print("```json")
-        console.print(x["content"])
+        console.print(value )
         console.print("```")
     else:
         console.print(str(value))

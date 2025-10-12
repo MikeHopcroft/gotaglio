@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 from .dag import Dag, run_dag
 from .exceptions import ExceptionContext
-from .mocks import Flakey, Perfect
+from .mocks import Fails, Flakey, Perfect
 from .registry import Registry
 from .shared import apply_patch, flatten_dict
 from .pipeline_spec import PipelineSpec
@@ -35,6 +35,7 @@ class Pipeline:
         # NOTE: this must be done before spec.create_dag, which accesses
         # models from the registry.
         registry = Registry(global_registry)
+        Fails(registry, spec.expected, {})
         Flakey(registry, spec.expected, {})
         Perfect(registry, spec.expected, {})
 
