@@ -1,7 +1,7 @@
 ### Test Gotaglio API Endpoints
 
 # Base URL - adjust port if needed
-@baseUrl = http://localhost:3000
+@baseUrl = http://localhost:8000
 
 ### Test root endpoint
 GET {{baseUrl}}/

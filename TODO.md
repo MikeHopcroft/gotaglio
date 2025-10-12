@@ -1,5 +1,14 @@
 # TODO
 
+gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.name=fails
+
+* @app.post("/api/infer") returns with succeeded == True even if exception raised
+* Model registration may be preventing tests from exiting cleanly
+  * Should only create a model when needed
+  * Should close clients when finished
+* Massive concurrancy
+  * Lift semaphore out of Director to allow matrix runs.
+  * Or add matrix runs to Director.
 * Ability to run a dag to a certain stage
   * This would allow turns 0..index-1 to run only prepare and then let the last turn run up to, say, extract.
   * This would allow us to avoid running validate()

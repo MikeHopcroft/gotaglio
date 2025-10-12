@@ -12,14 +12,14 @@ from gotaglio.pipeline_spec import (
 
 
 def create_dag(name, config, registry):
-    async def stage1(context):
+    async def stage1(context: dict[str, Any], turn_index: int, isolated: bool):
         return {"result1": 1 + glom(config, "stage1.initial")}
 
-    async def stage2(context):
+    async def stage2(context: dict[str, Any], turn_index: int, isolated: bool):
         result = get_result(context)
         return {"result2": 10 + glom(result, "stages.stage1.result1")}
 
-    async def stage3(context):
+    async def stage3(context: dict[str, Any], turn_index: int, isolated: bool):
         result = get_result(context)
         return {"result3": 100 + glom(result, "stages.stage2.result2")}
 

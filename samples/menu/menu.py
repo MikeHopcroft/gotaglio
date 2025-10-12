@@ -150,13 +150,11 @@ def stages(name, config, registry):
     # input stages have completed with a return value.
 
     # Stage 1:Create the system and user messages
-    async def prepare(context):
-        i = len(context["turns"]) - 1
-
+    async def prepare(context: dict[str, Any], turn_index: int, isolated_turn: bool):
         # Get previous assistant and user messages.
         previous = [
             x
-            for x in (context["turns"][i - 1]["stages"]["prepare"] if i != 0 else [])
+            for x in (context["turns"][turn_index - 1]["stages"]["prepare"] if turn_index != 0 else [])
             if x["role"] != "system"
         ]
 
@@ -186,34 +184,35 @@ def stages(name, config, registry):
         # at the beginning of this turn.
         cart = (
             context["case"]["cart"]
-            if i == 0
+            if turn_index == 0
             else (
                 # Why doesn't attempting to access context["isolated_turns"]
                 # risk raising a KeyError? I am assuming that "isolated_turns"
                 # only exists when True is its intended value.
-                context["turns"][i - 1]["stages"]["extract"]
+                context["turns"][turn_index - 1]["stages"]["extract"]
                 if linked_turns and not context["isolated_turns"]
-                else context["case"]["turns"][i - 1]["expected"]
+                else context["case"]["turns"][turn_index - 1]["expected"]
             )
         )
 
         assistant = {"role": "assistant", "content": to_json_string(cart)}
 
         # Prepare the user message for this turn.
-        user = {"role": "user", "content": context["case"]["turns"][i]["user"]}
+        user = {"role": "user", "content": context["case"]["turns"][turn_index]["user"]}
 
         return [system] + previous + [assistant, user]
 
     # Stage 2: Invoke the model to generate a response
-    async def infer(context):
-        stages = get_stages(context)
+    async def infer(context: dict[str, Any], turn_index: int, isolated_turn: bool):
+        stages = get_stages(context, turn_index)
         return await model.infer(stages["prepare"], context)
 
     # Stage 3: Attempt to extract a numerical answer from the model response.
     # Note that this method will raise an exception if the response is not
     # a number.
-    async def extract(context):
-        stages = get_stages(context)
+    async def extract(context: dict[str, Any], turn_index: int, isolated_turn: bool):
+        stages = get_stages(context, turn_index)
+        # stages = context["turns"][turn_index]["stages"]
         with ExceptionContext(f"Extracting JSON from LLM response."):
             text = stages["infer"]
 
@@ -225,9 +224,11 @@ def stages(name, config, registry):
             return json.loads(text)
 
     # Stage 4: Compare the model response to the expected answer.
-    async def assess(context):
-        stages = get_stages(context)
-        turn = get_turn(context)
+    async def assess(context: dict[str, Any], turn_index: int, isolated_turn: bool):
+        stages = get_stages(context, turn_index)
+        # stages = context["turns"][turn_index]["stages"]
+        turn = get_turn(context, turn_index)
+        # turn = context["case"]["turns"][turn_index]
         repair = Repair("id", "options", [], ["name"], "name")
         repair.resetIds()
         observed = repair.addIds(stages["extract"]["items"])
@@ -288,7 +289,7 @@ def user_cell(result, turn_index):
 ###############################################################################
 def format_turn(console: Console, turn_index, result: dict[str, Any]):
     stages = get_result(result, turn_index)
-    passed = passed_predicate(result)
+    passed = passed_predicate(result, turn_index)
     if passed:
         console.print(f"### Turn {turn_index + 1}: **PASSED**  ")
     else:
@@ -338,7 +339,7 @@ def expected(result, turn_index=None):
     return get_turn(result, turn_index)["expected"]
 
 
-def passed_predicate(result, turn_index=None):
+def passed_predicate(result, turn_index: int | None=None):
     """
     Predicate function to determine if the result is considered passing.
     This checks if the assessment stage's result is zero, indicating

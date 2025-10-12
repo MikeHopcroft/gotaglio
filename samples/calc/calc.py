@@ -2,6 +2,7 @@ from glom import glom
 import os
 from rich.text import Text
 import sys
+from typing import Any
 
 # Add the parent directory to the sys.path so that we can import from the
 # gotaglio package, as if it had been installed.
@@ -123,7 +124,7 @@ def stages(name, config, registry):
     # has completed with a return value.
 
     # Stage 1:Create the system and user messages
-    async def prepare(context):
+    async def prepare(context: dict[str, Any], turn_index: int, isolated_turn: bool):
         messages = [
             {"role": "system", "content": await template(context)},
             {"role": "user", "content": context["case"]["user"]},
@@ -132,18 +133,18 @@ def stages(name, config, registry):
         return messages
 
     # Stage 2: Invoke the model to generate a response
-    async def infer(context):
+    async def infer(context: dict[str, Any], turn_index: int, isolated_turn: bool):
         return await model.infer(context["stages"]["prepare"], context)
 
     # Stage 3: Attempt to extract a numerical answer from the model response.
     # Note that this method will raise an exception if the response is not
     # a number.
-    async def extract(context):
+    async def extract(context: dict[str, Any], turn_index: int, isolated_turn: bool):
         with ExceptionContext(f"Extracting numerical answer from LLM response."):
             return float(context["stages"]["infer"])
 
     # Stage 4: Compare the model response to the expected answer.
-    async def assess(context):
+    async def assess(context: dict[str, Any], turn_index: int, isolated_turn: bool):
         return context["stages"]["extract"] - context["case"]["answer"]
 
     # Define the pipeline
@@ -205,7 +206,7 @@ def expected(result):
     return get_turn(result)["answer"]
 
 
-def passed_predicate(result):
+def passed_predicate(result, turn_index: int | None):
     """
     Predicate function to determine if the result is considered passing.
     This checks if the assessment stage's result is zero, indicating

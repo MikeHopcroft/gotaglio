@@ -1,18 +1,20 @@
 import asyncio
 import pytest
+from typing import Any
 
 from gotaglio.dag import Dag, run_dag
+from gotaglio.dag import DagNodeSpec
 
 
 def test_duplicate_name():
-    async def f(context):
-        pass
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+        return {}
 
     spec = [
-        {"name": "A", "function": f, "inputs": []},
-        {"name": "A", "function": f, "inputs": ["A"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
+        DagNodeSpec(name="A", function=f, inputs=[]),
+        DagNodeSpec(name="A", function=f, inputs=["A"]),
+        DagNodeSpec(name="C", function=f, inputs=["A"]),
+        DagNodeSpec(name="D", function=f, inputs=["B", "C"]),
     ]
 
     # Should raise an exception
@@ -22,14 +24,14 @@ def test_duplicate_name():
 
 
 def test_invalid_input():
-    async def f(context):
-        pass
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+        return {}
 
     spec = [
-        {"name": "A", "function": f, "inputs": []},
-        {"name": "B", "function": f, "inputs": ["X"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
+        DagNodeSpec(name="A", function=f, inputs=[]),
+        DagNodeSpec(name="B", function=f, inputs=["X"]),
+        DagNodeSpec(name="C", function=f, inputs=["A"]),
+        DagNodeSpec(name="D", function=f, inputs=["B", "C"]),
     ]
 
     # Should raise an exception
@@ -39,14 +41,14 @@ def test_invalid_input():
 
 
 def test_duplicate_input():
-    async def f(context):
-        pass
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+        return {}
 
     spec = [
-        {"name": "A", "function": f, "inputs": []},
-        {"name": "B", "function": f, "inputs": ["A", "A"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
+        DagNodeSpec(name="A", function=f, inputs=[]),
+        DagNodeSpec(name="B", function=f, inputs=["A", "A"]),
+        DagNodeSpec(name="C", function=f, inputs=["A"]),
+        DagNodeSpec(name="D", function=f, inputs=["B", "C"]),
     ]
 
     # Should raise an exception
@@ -56,14 +58,14 @@ def test_duplicate_input():
 
 
 def test_no_root():
-    async def f(context):
-        pass
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+        return {}
 
     spec = [
-        {"name": "A", "function": f, "inputs": ["D"]},
-        {"name": "B", "function": f, "inputs": ["A"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
+        DagNodeSpec(name="A", function=f, inputs=["D"]),
+        DagNodeSpec(name="B", function=f, inputs=["A"]),
+        DagNodeSpec(name="C", function=f, inputs=["A"]),
+        DagNodeSpec(name="D", function=f, inputs=["B", "C"]),
     ]
 
     # Should raise an exception
@@ -73,14 +75,14 @@ def test_no_root():
 
 
 def test_has_cycle():
-    async def f(context):
-        pass
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+        return {}
 
     spec = [
-        {"name": "A", "function": f, "inputs": []},
-        {"name": "B", "function": f, "inputs": ["A", "D"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
+        DagNodeSpec(name="A", function=f, inputs=[]),
+        DagNodeSpec(name="B", function=f, inputs=["A", "D"]),
+        DagNodeSpec(name="C", function=f, inputs=["A"]),
+        DagNodeSpec(name="D", function=f, inputs=["B", "C"]),
     ]
 
     # Should raise an exception
@@ -90,16 +92,16 @@ def test_has_cycle():
 
 
 def test_unreachable_nodes():
-    async def f(context):
-        pass
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+        return {}
 
     spec = [
-        {"name": "A", "function": f, "inputs": []},
-        {"name": "B", "function": f, "inputs": ["A"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
-        {"name": "E", "function": f, "inputs": ["F"]},
-        {"name": "F", "function": f, "inputs": ["E"]},
+        DagNodeSpec(name="A", function=f, inputs=[]),
+        DagNodeSpec(name="B", function=f, inputs=["A"]),
+        DagNodeSpec(name="C", function=f, inputs=["A"]),
+        DagNodeSpec(name="D", function=f, inputs=["B", "C"]),
+        DagNodeSpec(name="E", function=f, inputs=["F"]),
+        DagNodeSpec(name="F", function=f, inputs=["E"]),
     ]
 
     # Should raise an exception
@@ -107,15 +109,16 @@ def test_unreachable_nodes():
         Dag.from_spec(spec)
     assert "The following nodes are unreachable: E, F" in str(e.value)
 
+
 def test_valid():
-    async def f(context):
-        pass
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+        return {}
 
     spec = [
-        {"name": "A", "function": f, "inputs": []},
-        {"name": "B", "function": f, "inputs": ["A"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
+        DagNodeSpec(name="A", function=f, inputs=[]),
+        DagNodeSpec(name="B", function=f, inputs=["A"]),
+        DagNodeSpec(name="C", function=f, inputs=["A"]),
+        DagNodeSpec(name="D", function=f, inputs=["B", "C"]),
     ]
 
     # Should not raise an exception
@@ -141,27 +144,23 @@ async def test_run():
             "end": end,
         }
 
-
-    async def a(context):
+    async def a(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("A", 0.01)
 
-
-    async def b(context):
+    async def b(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("B", 0.01)
 
-
-    async def c(context):
+    async def c(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("C", 0.02)
 
-
-    async def d(context):
-        return await work("B", 0.01)
+    async def d(context: dict[str, Any], turn_index: int, isolated: bool):
+        return await work("D", 0.01)
 
     spec = [
-        {"name": "A", "function": a, "inputs": []},
-        {"name": "B", "function": b, "inputs": ["A"]},
-        {"name": "C", "function": c, "inputs": ["A"]},
-        {"name": "D", "function": d, "inputs": ["B", "C"]},
+        DagNodeSpec(name="A", function=a, inputs=[]),
+        DagNodeSpec(name="B", function=b, inputs=["A"]),
+        DagNodeSpec(name="C", function=c, inputs=["A"]),
+        DagNodeSpec(name="D", function=d, inputs=["B", "C"]),
     ]
 
     # Should not raise an exception

@@ -16,12 +16,13 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 import sys
+from typing import Any
 
 # Add the parent directory to the sys.path so that we can import from the
 # gotaglio package, as if it had been installed.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from gotaglio.dag import Dag
+from gotaglio.dag import Dag, DagNodeSpec
 from gotaglio.main import main
 from gotaglio.pipeline_spec import PipelineSpec
 
@@ -49,22 +50,22 @@ def stages(name, config, registry):
     # simulates work by sleeping for a specified amount of time. The `work`
     # function returns a dictionary with the name of the stage, the start
     # time, and the end time.
-    async def a(context):
+    async def a(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("A", 0.01)
 
-    async def b(context):
+    async def b(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("B", 0.01)
 
-    async def c(context):
+    async def c(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("C", 0.02)
 
-    async def d(context):
+    async def d(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("B", 0.01)
 
-    async def e(context):
+    async def e(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("E", 0.01)
 
-    async def f(context):
+    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
         return await work("F", 0.01)
 
     # The work() function is used by each stage to simulate work.
@@ -100,12 +101,12 @@ def stages(name, config, registry):
     #        F
     #
     spec = [
-        {"name": "A", "function": a, "inputs": []},
-        {"name": "B", "function": b, "inputs": ["A"]},
-        {"name": "C", "function": c, "inputs": ["A"]},
-        {"name": "D", "function": d, "inputs": ["B", "C"]},
-        {"name": "E", "function": e, "inputs": []},
-        {"name": "F", "function": f, "inputs": ["D", "E"]},
+        DagNodeSpec(name="A", function=a, inputs=[]),
+        DagNodeSpec(name="B", function=b, inputs=["A"]),
+        DagNodeSpec(name="C", function=c, inputs=["A"]),
+        DagNodeSpec(name="D", function=d, inputs=["B", "C"]),
+        DagNodeSpec(name="E", function=e, inputs=[]),
+        DagNodeSpec(name="F", function=f, inputs=["D", "E"]),
     ]
 
     return Dag.from_spec(spec)
@@ -154,49 +155,10 @@ dag_pipeline_spec = PipelineSpec(
     configuration={},
     create_dag=stages,
     # passed_predicate=lambda result: True,
+    expected=lambda context: None,
     formatter=format,
     summarizer=summarize,
-    format=format,
 )
-
-# class DAGPipeline(Pipeline):
-#     # The Pipeline abstract base class requires _name and _description.
-#     # These are used by the Registry to list and instantiate pipelines.
-#     # The `pipelines` subcommand will print a list of available pipelines,
-#     # with their names and descriptions.
-#     _name = "dag"
-#     _description = "An example of a directed acyclic graph (DAG) pipeline."
-
-#     def __init__(self, registry, replacement_config, flat_config_patch):
-#         default_config = {}
-#         super().__init__(default_config, replacement_config, flat_config_patch)
-
-
-#     # For the purposes of this demo we define a very limited summarize() method
-#     # that prints out a timeline for the first case.
-#     def summarize(self, runlog):
-#         results = runlog["results"]
-#         if len(results) == 0:
-#             print("No results.")
-#         else:
-#             timeline(results[0])
-
-
-#     # A simple format() method that prints out a timeline for each case.
-#     def format(self, runlog, uuid_prefix):
-#         results = runlog["results"]
-#         if len(results) == 0:
-#             print("No results.")
-#         else:
-#             for result in results:
-#                 if uuid_prefix and not result["case"]["uuid"].startswith(uuid_prefix):
-#                     continue
-#             timeline(result)
-
-
-#     def compare(self, a, b):
-#         print("Compare not implemented.")
-
 
 # Helper function that renders the execution timeline as a table.
 # Uses the rich Table class to print out a timeline
@@ -212,7 +174,7 @@ def timeline(context):
         table.add_column(name, justify="center", style="cyan", no_wrap=True)
 
     for i in range(1, last + 1):
-        row = [str(i)]
+        row: list[str | Text] = [str(i)]
         for name in names:
             stage = stages[name]
             if stage["start"] <= i <= stage["end"]:

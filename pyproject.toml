@@ -23,6 +23,7 @@ packages = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v"
+asyncio_mode = "auto"
 
 [tool.poetry.dependencies]
 python = ">=3.12"

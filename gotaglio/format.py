@@ -65,7 +65,7 @@ def format(
                         ]
                     )
                     if using_turns
-                    else spec.passed_predicate(result)
+                    else spec.passed_predicate(result, None)
                 )
 
                 console.print(
