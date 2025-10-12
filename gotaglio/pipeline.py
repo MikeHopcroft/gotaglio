@@ -2,8 +2,7 @@ from datetime import datetime, timedelta, timezone
 import traceback
 from typing import Any, Callable
 
-from .dag import run_dag
-
+from .dag import Dag, run_dag
 from .exceptions import ExceptionContext
 from .mocks import Flakey, Perfect
 from .registry import Registry
@@ -122,7 +121,7 @@ def ensure_required_configs(name, default_config, config):
 # TODO: do we really need process_one_case() anymore?
 async def process_one_case(
     case: dict[str, Any],
-    dag,
+    dag: Dag,
     completed: Callable | None = None,
     turn: int | None = None,
 ):

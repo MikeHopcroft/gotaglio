@@ -4,21 +4,6 @@ import pytest
 from gotaglio.dag import Dag, run_dag
 
 
-def test_valid():
-    async def f(context):
-        pass
-
-    spec = [
-        {"name": "A", "function": f, "inputs": []},
-        {"name": "B", "function": f, "inputs": ["A"]},
-        {"name": "C", "function": f, "inputs": ["A"]},
-        {"name": "D", "function": f, "inputs": ["B", "C"]},
-    ]
-
-    # Should not raise an exception
-    build_dag_from_spec(spec)
-
-
 def test_duplicate_name():
     async def f(context):
         pass

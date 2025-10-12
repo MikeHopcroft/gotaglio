@@ -301,7 +301,7 @@ async def run_turn(
         turn["succeeded"] = succeeded
 
 
-async def run_dag_helper(dag_object, context, stages, timing):
+async def run_dag_helper(dag_object: Dag, context, stages, timing):
     dag = dag_object.dag
 
     # DESIGN NOTE: the dict of unfulfilled dependencies is stored per-run,

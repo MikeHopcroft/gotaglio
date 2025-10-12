@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from rich.console import Console
 from typing import Any, Callable
 
+from .dag import Dag
 
 class FormatterSpec(BaseModel):
     before_case: Callable[[Console, dict[str, Any]], None] | None = Field(
@@ -18,7 +19,7 @@ class FormatterSpec(BaseModel):
 class ColumnSpec(BaseModel):
     name: str = Field(..., min_length=1, description="Column name")
     params: dict[str, Any] = Field(
-        {}, description="Rich formatting parameters for the column"
+        default={}, description="Rich formatting parameters for the column"
     )
     contents: Callable[[dict[str, Any], int], Any] = Field(
         ..., description="Function to create the cell contents"
@@ -42,7 +43,7 @@ class PipelineSpec(BaseModel):
     name: str = Field(..., min_length=1, description="Pipeline name")
     description: str = Field(..., min_length=1, description="Pipeline description")
     configuration: dict[str, Any] = Field(..., description="Pipeline configuration")
-    create_dag: Callable[[str, dict[str, Any], Any], Any] = Field(
+    create_dag: Callable[[str, dict[str, Any], Any], Dag] = Field(
         ..., description="Function to create the DAG"
     )
     expected: Callable[[dict[str, Any]], Any] = Field(
