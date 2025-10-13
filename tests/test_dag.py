@@ -1,13 +1,13 @@
 import asyncio
 import pytest
-from typing import Any
+from typing import Any, cast
 
-from gotaglio.dag import Dag, run_dag
+from gotaglio.dag import Context, Dag, run_dag
 from gotaglio.dag import DagNodeSpec
 
 
 def test_duplicate_name():
-    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def f(context: Context, turn_index: int | None, isolated: bool):
         return {}
 
     spec = [
@@ -24,7 +24,7 @@ def test_duplicate_name():
 
 
 def test_invalid_input():
-    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def f(context: Context, turn_index: int | None, isolated: bool):
         return {}
 
     spec = [
@@ -41,7 +41,7 @@ def test_invalid_input():
 
 
 def test_duplicate_input():
-    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def f(context: Context, turn_index: int | None, isolated: bool):
         return {}
 
     spec = [
@@ -58,7 +58,7 @@ def test_duplicate_input():
 
 
 def test_no_root():
-    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def f(context: Context, turn_index: int | None, isolated: bool):
         return {}
 
     spec = [
@@ -75,7 +75,7 @@ def test_no_root():
 
 
 def test_has_cycle():
-    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def f(context: Context, turn_index: int | None, isolated: bool):
         return {}
 
     spec = [
@@ -92,7 +92,7 @@ def test_has_cycle():
 
 
 def test_unreachable_nodes():
-    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def f(context: Context, turn_index: int | None, isolated: bool):
         return {}
 
     spec = [
@@ -111,7 +111,7 @@ def test_unreachable_nodes():
 
 
 def test_valid():
-    async def f(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def f(context: Context, turn_index: int | None, isolated: bool):
         return {}
 
     spec = [
@@ -144,16 +144,16 @@ async def test_run():
             "end": end,
         }
 
-    async def a(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def a(context: Context, turn_index: int | None, isolated: bool):
         return await work("A", 0.01)
 
-    async def b(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def b(context: Context, turn_index: int | None, isolated: bool):
         return await work("B", 0.01)
 
-    async def c(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def c(context: Context, turn_index: int | None, isolated: bool):
         return await work("C", 0.02)
 
-    async def d(context: dict[str, Any], turn_index: int, isolated: bool):
+    async def d(context: Context, turn_index: int | None, isolated: bool):
         return await work("D", 0.01)
 
     spec = [
@@ -166,7 +166,8 @@ async def test_run():
     # Should not raise an exception
     dag = Dag.from_spec(spec)
 
-    context = await run_dag(dag, {})
+    # TODO: remove this cast.
+    context = cast(dict[str, Any], await run_dag(dag, {}))
 
     a1 = context["stages"]["A"]
     b1 = context["stages"]["B"]

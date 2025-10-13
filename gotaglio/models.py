@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, cast
 
+from .basic_types import Configuration
 from .constants import app_configuration
 from .exceptions import ExceptionContext
 from .lazy_imports import azure_ai_inference, azure_core_credentials, openai
@@ -23,7 +24,7 @@ class Model(ABC):
 
 
 class AzureAI(Model):
-    def __init__(self, registry, configuration):
+    def __init__(self, registry, configuration: Configuration):
         self._config = configuration
         self._client = None
         registry.register_model(configuration["name"], self)
@@ -46,7 +47,7 @@ class AzureAI(Model):
 
 
 class AzureOpenAI(Model):
-    def __init__(self, registry, configuration):
+    def __init__(self, registry, configuration: Configuration):
         self._config = configuration
         self._client = None
         registry.register_model(configuration["name"], self)

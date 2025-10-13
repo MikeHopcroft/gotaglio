@@ -1,13 +1,36 @@
 import asyncio
+from basic_types import SerializableDict, SerializableValue
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta, timezone
 import time
 import traceback
-from typing import Any, Awaitable, Callable, List
+from typing import Any, Awaitable, Callable, cast, List, TypeAlias, Union
 
 from .exceptions import ExceptionContext
 
-StageCoroutine = Callable[[dict[str, Any], int | None, bool], Awaitable[dict[str, Any]]]
+from typing import TypedDict, NotRequired
+
+# class TurnDict(TypedDict):
+#     succeeded: bool
+#     start: str
+#     end: str
+#     elapsed: str
+#     metadata: SerializableDict
+#     stages: SerializableDict
+
+# class ContextDict(TypedDict):
+#     succeeded: bool
+#     metadata: SerializableDict
+#     case: SerializableValue
+#     turns: NotRequired[List[TurnDict]]
+#     stages: NotRequired[SerializableDict]
+#     exception: NotRequired[SerializableDict]
+
+# # Then change the Context type alias:
+# Context = ContextDict
+
+Context = SerializableDict
+StageCoroutine = Callable[[Context, int | None, bool], Awaitable[SerializableValue]]
 
 @dataclass
 class DagNodeSpec:
@@ -121,9 +144,9 @@ class Timer:
 def make_task(
     name: str,
     dag,
-    stages: dict[str, Any],
-    timing: dict[str, Any],
-    context: dict[str, Any],
+    stages: SerializableDict,
+    timing: SerializableDict,
+    context: Context,
     turn_index: int | None,
     isolated: bool,
 ):
@@ -136,9 +159,9 @@ def make_task(
 async def run_task(
     name: str,
     dag: dict[str, DagNode],
-    stages: dict[str, Any],
-    timing: dict[str, Any],
-    context: dict[str, Any],
+    stages: SerializableDict,
+    timing: SerializableDict,
+    context: Context,
     turn_index: int | None,
     isolated: bool,
 ):
@@ -165,15 +188,16 @@ async def run_task(
         }
         raise e
     finally:
-        timing[name] = {"succeeded": succeeded}
-        timing[name].update(timer.get_times())
+        x: SerializableDict = {"succeeded": succeeded}
+        x.update(timer.get_times())
+        timing[name] = x
 
     return name
 
 
 async def run_dag(
     dag_object: Dag, case, turn_index: int | None = None
-) -> dict[str, Any]:
+) -> Context:
     # DESIGN NOTE: for readability, set `succeeded` here to keep it as
     # the first property. Contract is that `succeeded` indicates that
     # a run has succeded at some point. Failed runs and runs in progress
@@ -236,15 +260,15 @@ async def run_dag(
 
 
 async def run_turn(
-    dag_object: Dag, context: dict[str, Any], turn_index: int, isolated: bool
+    dag_object: Dag, context: Context, turn_index: int, isolated: bool
 ):
     timer = Timer()
     timing = {}
-    metadata = {
+    metadata: SerializableDict = {
         "stages": timing,
     }
     stages = {}
-    turn: dict[str, Any] = {
+    turn: SerializableDict = {
         # DESIGN NOTE: for readability, set `succeeded` here to keep it as
         # the first property. Contract is that `succeeded` indicates that
         # a run has succeded at some point. Failed runs and runs in progress
@@ -264,7 +288,7 @@ async def run_turn(
     # because contract for stage co-routines is that the current turn number
     # can be determined by len(context["turns"]). Otherwise the creation of
     # `turn` and the append operation would be done in the finally block.
-    context["turns"].append(turn)
+    cast(List[SerializableValue], context["turns"]).append(turn)
     succeeded = False
 
     try:
@@ -285,9 +309,9 @@ async def run_turn(
 
 async def run_dag_helper(
     dag_object: Dag,
-    stages: dict[str, Any],
-    timing: dict[str, Any],
-    context: dict[str, Any],
+    stages: SerializableDict,
+    timing: SerializableDict,
+    context: Context,
     turn_index: int | None,
     isolated: bool,
 ):

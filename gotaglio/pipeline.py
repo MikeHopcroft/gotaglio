@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 import traceback
 from typing import Any, Callable
 
+from .basic_types import Configuration, Case
 from .dag import Dag, run_dag
 from .exceptions import ExceptionContext
 from .mocks import Fails, Flakey, Perfect
@@ -14,8 +15,8 @@ class Pipeline:
     def __init__(
         self,
         spec: PipelineSpec,
-        replacement_config: dict[str, Any] | None,
-        flat_config_patch: dict[str, Any],
+        replacement_config: Configuration | None,
+        flat_config_patch: Configuration,
         global_registry: Registry,
     ):
         self._spec = spec
@@ -53,7 +54,7 @@ class Pipeline:
         return diff_configs(self._spec.configuration, self._config)
 
 
-def diff_configs(default_config: dict[str, Any], config: dict[str, Any]):
+def diff_configs(default_config: Configuration, config: Configuration):
     default_config = flatten_dict(default_config)
     config = flatten_dict(config)
     diff = []
@@ -121,7 +122,7 @@ def ensure_required_configs(name, default_config, config):
 
 # TODO: do we really need process_one_case() anymore?
 async def process_one_case(
-    case: dict[str, Any],
+    case: Case,
     dag: Dag,
     completed: Callable | None = None,
     turn: int | None = None,

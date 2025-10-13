@@ -8,7 +8,8 @@ from typing import Any
 # gotaglio package, as if it had been installed.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from gotaglio.dag import Dag
+from gotaglio.basic_types import Case, Configuration
+from gotaglio.dag import Context, Dag
 from gotaglio.exceptions import ExceptionContext
 from gotaglio.main import main
 from gotaglio.pipeline_spec import (
@@ -70,7 +71,7 @@ configuration = {
 # Stage Functions
 #
 ###############################################################################
-def stages(name, config, registry):
+def stages(name, config: Configuration, registry):
     """
     Defines the structure of a simple, linear pipeline with four stages:
       **prepare** - creates the system prompt and user messages for the model
@@ -124,7 +125,7 @@ def stages(name, config, registry):
     # has completed with a return value.
 
     # Stage 1:Create the system and user messages
-    async def prepare(context: dict[str, Any], turn_index: int, isolated_turn: bool):
+    async def prepare(context: Context, turn_index: int, isolated_turn: bool):
         messages = [
             {"role": "system", "content": await template(context)},
             {"role": "user", "content": context["case"]["user"]},

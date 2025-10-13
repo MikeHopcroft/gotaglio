@@ -1,12 +1,13 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
-import os
+# import os
 import sys
 import traceback
 from typing import Any, Callable, List
 import uuid
 
-from .constants import app_configuration
+from basic_types import Case, Configuration
+# from .constants import app_configuration
 from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener
 from .models import register_models
@@ -51,8 +52,8 @@ class Director:
     def __init__(
         self,
         pipeline_spec: PipelineSpec,
-        replacement_config: dict[str, Any] | None,
-        flat_config_patch: dict[str, Any],
+        replacement_config: Configuration | None,
+        flat_config_patch: Configuration,
         max_concurrency: int,
     ):
         self._start = datetime.now().timestamp()
@@ -131,7 +132,7 @@ class Director:
 
     async def process_one_case(
         self,
-        case: dict[str, Any],
+        case: Case,
         completed: Callable | None = None,
         turn: int | None = None,
     ):

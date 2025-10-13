@@ -3,14 +3,15 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Any, Dict
-import threading
+# import threading
 
+from .basic_types import Configuration, Case
 from .director import Director
 from .pipeline_spec import PipelineSpec
 
 
 class InferRequest(BaseModel):
-    case: Dict[str, Any]
+    case: Case
     turn: int
 
 
