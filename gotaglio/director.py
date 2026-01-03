@@ -6,7 +6,7 @@ import traceback
 from typing import Any, Callable, List
 import uuid
 
-from basic_types import Case, Configuration
+from .basic_types import Case, Configuration
 # from .constants import app_configuration
 from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener

@@ -75,7 +75,7 @@ def compare(pipeline_specs: PipelineSpecs, a: dict[str, Any], b: dict[str, Any])
             pass_count_b += 1
         rows.append(
             (
-                (Text(short_id(uuid)), text_a, text_b, keywords),
+                (Text(short_id(uuid) or uuid), text_a, text_b, keywords),
                 order_b * 4 + order_a,
             )
         )
@@ -98,7 +98,9 @@ def compare(pipeline_specs: PipelineSpecs, a: dict[str, Any], b: dict[str, Any])
 
 def format_status(pipeline_spec: PipelineSpec, result: dict[str, Any]):
     if result["succeeded"]:
-        if pipeline_spec.passed_predicate(result):
+        # TODO: REMOVE HACK of adding turn_index parameter as 0.
+        # This code needs to be reworked to handle multiple turns properly.
+        if pipeline_spec.passed_predicate(result, 0):
             return (Text("passed", style="bold green"), 0)
         else:
             return (Text("failed", style="bold red"), 1)

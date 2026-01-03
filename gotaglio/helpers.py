@@ -22,7 +22,7 @@ def IdShortener(composite_ids):
     return lambda uuid: shorten(uuid, prefix_len)
 
 
-def shorten(composite_id, prefix_len):
+def shorten(composite_id: str, prefix_len: int) -> str | None:
     """
     Shorten a composite id of the form uuid.n to a minimal unique prefix.
     If the id is not in the expected format, return None.
@@ -34,9 +34,10 @@ def shorten(composite_id, prefix_len):
     return f"{uuid[:prefix_len]}{'.' + str(n) if n is not None else ''}"
 
 
-def parse_id(id):
+def parse_id(id: str) -> tuple[str, int | None] | None:
     """
-    Parse an id string of the form uuid or uuid.n where uuid is a uuid v4 and n is a non-negative integer.
+    Parse an id string of the form uuid or uuid.n where uuid is a uuid v4 and
+    n is a non-negative integer.
     Return a tuple of (uuid, n). If the ID is just a uuid, return (uuid, None).
     If the ID is not in the expected format, return None.
     """

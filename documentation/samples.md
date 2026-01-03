@@ -1,6 +1,7 @@
 # Sample Applications
 
 GoTaglio includes a number of samples:
+* TODO: Calc added. Simple seems to be gone.
 * [simple.py](../samples/simple/simple.py) - demonstration of a simple 4 stage linear pipeline that uses a language model as a calculator.
 * [dag.py](../samples/dag/dag.py) - demonstration of a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAG) pipeline.
 * [menu.py](../samples/menu/menu.py) - a restaurant ordering bot

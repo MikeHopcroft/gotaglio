@@ -4,7 +4,22 @@
     "description": "Phi-3 medium 128k",
     "type": "AZURE_AI",
     "endpoint": "https://Phi-3-medium-128k-instruct-vysaw.eastus2.models.ai.azure.com",
+    "authentication": {
+      "type": "oauth"
+    },
     "key": "From .credentials.json"
+  },
+  {
+    "name": "deepseek3.1",
+    "description": "DeepSeek-V3.1",
+    "type": "AZURE_OPEN_AI",
+    "endpoint": "https://mhop-foundry.openai.azure.com/openai/v1/",
+    "deployment": "DeepSeek-V3.1",
+    "authentication": {
+      "type": "oauth"
+    },
+    "key": "From .credentials.json",
+    "api": "2024-02-15-preview"
   },
   {
     "name": "gpt3.5",
@@ -21,7 +36,22 @@
     "type": "AZURE_OPEN_AI",
     "endpoint": "https://mhop-azure-openai.openai.azure.com/",
     "deployment": "gpt-4o-2024-11-20",
+    "authentication": {
+      "type": "oauth"
+    },
     "key": "From .credentials.json",
     "api": "2024-08-01-preview"
+  },
+  {
+    "name": "gpt-5-mini",
+    "description": "GPT-5-mini",
+    "type": "AZURE_OPEN_AI",
+    "endpoint": "https://mhop-foundry.openai.azure.com/openai/v1/",
+    "deployment": "gpt-5-mini",
+    "authentication": {
+      "type": "oauth"
+    },
+    "key": "From .credentials.json",
+    "api": "2024-02-15-preview"
   }
 ]

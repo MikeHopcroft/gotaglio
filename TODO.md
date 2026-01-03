@@ -2,6 +2,14 @@
 
 gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.name=fails
 
+* Integrate new models into notebooks (calc.ipynb is currently broken)
+* Remove factmcp dependency
+* Fix calculator example
+* OAuth support
+* Tools and MCP support
+* One-step pipeline helper? What about formatter?
+* Document formatting expand/collapse in markdown
+* compare.py format_status() needs to handle turns correctly
 * process_all_cases() should use Timer
 * Reevaluate convenience functions like get_turn()
   * Should we always require turn_index when we have turns?
