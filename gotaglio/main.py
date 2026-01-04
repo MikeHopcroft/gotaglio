@@ -19,18 +19,6 @@ from .subcommands.summarize_cmd import summarize_command
 def main(pipelines: list[PipelineSpec]):
     pipeline_specs = PipelineSpecs(pipelines)
  
-    # Use create_registry() to delay Registry configuration until we
-    # actually need to instantiate a Registry. This avoids Registry
-    # instantiation exceptions before argument parsing exceptions.
-    def create_registry():
-        from .models import register_models
-        
-        registry = Registry()
-        for pipeline in pipelines:
-            registry.register_pipeline(pipeline)
-        register_models(registry)
-        return registry
-
     #
     # Configure command line parsing.
     #

@@ -1,8 +1,8 @@
 import json
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
-from .models import Model
-from .pipeline_spec import get_turn
+from .mcp_tools import CustomModelConfig, MCPTools, Model
+from .registry import Registry
 
 
 class Fails(Model):
@@ -13,11 +13,15 @@ class Fails(Model):
       3. raising an exception
     """
 
-    def __init__(
-        self, registry, expected: Callable[[dict[str, Any]], Any], configuration
-    ):
-        self._expected = expected
-        registry.register_model("fails", self)
+    @classmethod
+    def register(cls, registry: Registry, expected: Callable[[dict[str, Any]], Any]):
+        configuration = CustomModelConfig(
+            name="fails", type="CUSTOM_MODEL", parameters=expected
+        )
+        registry.register_custom_model(cls, configuration)
+
+    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPTools]):
+        self._expected = configuration.parameters
 
     async def infer(self, messages, context: dict[str, Any] | None = None):
         raise Exception("Fails model failed")
@@ -33,13 +37,16 @@ class Flakey(Model):
       2. returning "hello world"
       3. raising an exception
     """
-
-    def __init__(
-        self, registry, expected: Callable[[dict[str, Any]], Any], configuration
-    ):
+    @classmethod
+    def register(cls, registry: Registry, expected: Callable[[dict[str, Any]], Any]):
+        configuration = CustomModelConfig(
+            name="flakey", type="CUSTOM_MODEL", parameters=expected
+        )
+        registry.register_custom_model(cls, configuration)
+    
+    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPTools]):
         self._counter = -1
-        self._expected = expected
-        registry.register_model("flakey", self)
+        self._expected = configuration.parameters
 
     async def infer(self, messages, context: dict[str, Any] | None = None):
         if context is None:
@@ -61,18 +68,21 @@ class Perfect(Model):
     A mock model class that always returns the expected answer
     from result["case"]["answer"]
     """
+    @classmethod
+    def register(cls, registry: Registry, expected: Callable[[dict[str, Any]], Any]):
+        configuration = CustomModelConfig(
+            name="perfect", type="CUSTOM_MODEL", parameters=expected
+        )
+        registry.register_custom_model(cls, configuration)
 
-    def __init__(
-        self, registry, expected: Callable[[dict[str, Any]], Any], configuration
-    ):
-        registry.register_model("perfect", self)
-        self._expected = expected
+    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPTools]):
+        self._expected = configuration.parameters
 
     async def infer(self, messages, context: dict[str, Any] | None = None):
         if context is None:
             raise ValueError("Context is required for Perfect model inference.")
         return to_llm_string(self._expected(context))
-    
+
     def metadata(self):
         return {}
 

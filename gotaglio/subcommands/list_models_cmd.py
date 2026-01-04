@@ -1,9 +1,8 @@
-from ..models import register_models
-from ..registry import Registry
+from ..registry import register_models2, Registry
 
-def list_models():
+def list_models() -> None:
     registry = Registry()
-    register_models(registry)
+    register_models2(registry)
     print("Available models:")
     for k, v in registry._models.items():
         print(f"  {k}: {v.metadata()["description"]}")

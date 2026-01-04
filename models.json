@@ -1,19 +1,9 @@
 [
   {
-    "name": "phi3",
-    "description": "Phi-3 medium 128k",
-    "type": "AZURE_AI",
-    "endpoint": "https://Phi-3-medium-128k-instruct-vysaw.eastus2.models.ai.azure.com",
-    "authentication": {
-      "type": "oauth"
-    },
-    "key": "From .credentials.json"
-  },
-  {
     "name": "deepseek3.1",
     "description": "DeepSeek-V3.1",
     "type": "AZURE_OPEN_AI",
-    "endpoint": "https://mhop-foundry.openai.azure.com/openai/v1/",
+    "endpoint": "https://mhop-foundry.openai.azure.com",
     "deployment": "DeepSeek-V3.1",
     "authentication": {
       "type": "oauth"
@@ -46,7 +36,7 @@
     "name": "gpt-5-mini",
     "description": "GPT-5-mini",
     "type": "AZURE_OPEN_AI",
-    "endpoint": "https://mhop-foundry.openai.azure.com/openai/v1/",
+    "endpoint": "https://mhop-foundry.openai.azure.com",
     "deployment": "gpt-5-mini",
     "authentication": {
       "type": "oauth"

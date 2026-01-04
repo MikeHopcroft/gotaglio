@@ -11,8 +11,8 @@ from fastmcp import FastMCP
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import TypeAdapter
 
-from gotaglio.mcp_tools import MCPTools, ModelConfig, Registry2, register_models2
-
+from gotaglio.mcp_tools import MCPTools, ModelConfig
+from gotaglio.registry import register_models2, Registry
 
 raw_config = [
     # {
@@ -70,7 +70,7 @@ def create_mcp_server():
 
 
 async def run_test():
-    registry = Registry2()
+    registry = Registry()
 
     adapter = TypeAdapter(list[ModelConfig])
     validated_configs = adapter.validate_python(raw_config)

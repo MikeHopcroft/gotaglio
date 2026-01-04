@@ -128,7 +128,7 @@ def stages(name, config: Configuration, registry):
     async def prepare(context: Context, turn_index: int, isolated_turn: bool):
         messages = [
             {"role": "system", "content": await template(context)},
-            {"role": "user", "content": context["case"]["user"]},
+            {"role": "user", "content": glom(context, "case.user")},
         ]
 
         return messages

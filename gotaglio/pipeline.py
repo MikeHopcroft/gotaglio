@@ -36,9 +36,9 @@ class Pipeline:
         # NOTE: this must be done before spec.create_dag, which accesses
         # models from the registry.
         registry = Registry(global_registry)
-        Fails(registry, spec.expected, {})
-        Flakey(registry, spec.expected, {})
-        Perfect(registry, spec.expected, {})
+        Fails.register(registry, spec.expected)
+        Flakey.register(registry, spec.expected)
+        Perfect.register(registry, spec.expected)
 
         # Create the DAG.
         turn_dag = spec.create_dag(spec.name, self._config, registry)
