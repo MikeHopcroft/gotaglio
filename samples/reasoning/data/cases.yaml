@@ -1,0 +1,8 @@
+# Note that each test case must have a unique UUID.
+# UUIDs can be added with the `add-ids` subcommand or the
+# ` method.
+- uuid: a045b6c3-0953-480a-b455-9d502f629277
+  keywords:
+    - numbers
+  user: "Hello, world"
+  answer: "DLROW ,OLLEH"

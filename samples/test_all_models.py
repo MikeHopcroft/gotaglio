@@ -11,8 +11,8 @@ from fastmcp import FastMCP
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import TypeAdapter
 
-from gotaglio.mcp_tools import MCPTools, ModelConfig
-from gotaglio.registry import register_models2, Registry
+from gotaglio.mcp_tools import MCPServer, MCPTools, ModelConfig
+from gotaglio.registry import register_models, Registry
 
 raw_config = [
     # {
@@ -79,13 +79,12 @@ async def run_test():
     for config in validated_configs:
         registry.register_standard_model(config)
 
-    mcp = create_mcp_server()
-    mcp_tools = MCPTools(mcp)
+    mcp_server = create_mcp_server()
 
     for config in validated_configs:
         print("=" * 40)
         print(f"Testing model: {config.name}")
-        model = registry.model(config.name, mcp_tools)
+        model = registry.model(config.name, mcp_server)
         messages: list[ChatCompletionMessageParam] = [
             {
                 "role": "user",

@@ -7,32 +7,33 @@
 # from mcp.server.fastmcp import FastMCP
 import asyncio
 from fastmcp import FastMCP
+import json
 # if TYPE_CHECKING:
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import TypeAdapter
 
-from gotaglio.mcp_tools import AzureFoundryModel, MCPTools, ModelConfig
+from gotaglio.mcp_tools import AzureFoundryModel, ModelConfig
 
 
 raw_config = [
-    # {
-    #     "name": "gpt-5-mini",
-    #     "description": "GPT-5-mini",
-    #     "type": "AZURE_OPEN_AI",
-    #     "endpoint": "https://mhop-foundry.openai.azure.com",
-    #     "deployment": "gpt-5-mini",
-    #     "authentication": {"type": "oauth"},
-    #     "api": "2024-02-15-preview",
-    # },
-    # {
-    #     "name": "deepseek-v3.1",
-    #     "description": "DeepSeek-V3.1",
-    #     "type": "AZURE_OPEN_AI",
-    #     "endpoint": "https://mhop-foundry.openai.azure.com",
-    #     "deployment": "DeepSeek-V3.1",
-    #     "authentication": {"type": "oauth"},
-    #     "api": "2024-02-15-preview",
-    # },
+    {
+        "name": "gpt-5-mini",
+        "description": "GPT-5-mini",
+        "type": "AZURE_OPEN_AI",
+        "endpoint": "https://mhop-foundry.openai.azure.com",
+        "deployment": "gpt-5-mini",
+        "authentication": {"type": "oauth"},
+        "api": "2024-02-15-preview",
+    },
+    {
+        "name": "deepseek-v3.1",
+        "description": "DeepSeek-V3.1",
+        "type": "AZURE_OPEN_AI",
+        "endpoint": "https://mhop-foundry.openai.azure.com",
+        "deployment": "DeepSeek-V3.1",
+        "authentication": {"type": "oauth"},
+        "api": "2024-02-15-preview",
+    },
     {
         "name": "gpt4o",
         "description": "gpt-4o-2024-11-20",
@@ -70,8 +71,7 @@ def create_mcp_server():
 
 
 async def run_test():
-    mcp = create_mcp_server()
-    mcp_tools = MCPTools(mcp)
+    mcp_server = create_mcp_server()
 
     adapter = TypeAdapter(list[ModelConfig])
     validated_configs = adapter.validate_python(raw_config)
@@ -80,7 +80,7 @@ async def run_test():
     for config in validated_configs:
         print("=" * 40)
         print(f"Testing model: {config.name}")
-        model = AzureFoundryModel(config, mcp_tools=mcp_tools)
+        model = AzureFoundryModel(config, mcp_server)
         messages: list[ChatCompletionMessageParam] = [
             {
                 "role": "user",
@@ -89,6 +89,7 @@ async def run_test():
         ]
 
         await model.infer(messages)
+        print(json.dumps(messages, indent=2))
 
 
 

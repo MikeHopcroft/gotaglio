@@ -10,7 +10,7 @@ from .git_ops import get_current_edits, get_git_sha
 from .helpers import IdShortener
 from .pipeline import Pipeline, process_one_case
 from .pipeline_spec import PipelineSpec
-from .registry import register_models2, Registry
+from .registry import register_models, Registry
 from .shared import write_json_file
 
 # Director responsibilities:
@@ -58,7 +58,7 @@ class Director:
         self._concurrency = max_concurrency
 
         registry = Registry()
-        register_models2(registry)
+        register_models(registry)
 
         self._pipeline = Pipeline(
             pipeline_spec, replacement_config, flat_config_patch, registry

@@ -1,0 +1,2 @@
+Your goal is to transform the user input by passing it to stage1
+and then passing the result to stage2. Return the result of stage2.

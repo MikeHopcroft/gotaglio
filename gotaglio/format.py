@@ -123,8 +123,13 @@ def format_messages(console, messages, collapse: list[str] | None = None):
     Each message is a dictionary with 'role' and 'content' keys.
     """
     for m in messages:
-        if m["role"] == "assistant" or m["role"] == "system":
+        if m["role"] == "assistant" or m["role"] == "system" or m["role"] == "tool":
             console.print(f"**{m['role']}:**")
+            if "tool_calls" in m:
+                console.print("Model made tool calls:")
+                for tool_call in m["tool_calls"]:
+                    console.print(f"- Tool: { glom(tool_call, 'function.name')}")
+                    console.print(f"  Arguments: {glom(tool_call, 'function.arguments')}")
             should_collapse = (
                 collapse
                 and m["role"] in collapse

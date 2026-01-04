@@ -3,10 +3,10 @@ from typing import Callable, Optional
 
 from .constants import app_configuration
 from .exceptions import ExceptionContext
-from .mcp_tools import AzureFoundryModel, CustomModelConfig, MCPTools, Model, ModelConfig
+from .mcp_tools import AzureFoundryModel, CustomModelConfig, MCPServer, Model, ModelConfig
 from .shared import format_list, read_data_file
 
-ModelFactory = Callable[[Optional[MCPTools]], Model]
+ModelFactory = Callable[[Optional[MCPServer]], Model]
 
 class Registry:
     def __init__(self, registry: Optional["Registry"] = None):
@@ -22,7 +22,7 @@ class Registry:
 
     def register_custom_model(
         self,
-        factory: Callable[[CustomModelConfig, Optional[MCPTools]], Model],
+        factory: Callable[[CustomModelConfig, Optional[MCPServer]], Model],
         config: CustomModelConfig,
     ):
         if config.name in self._models:
@@ -31,7 +31,7 @@ class Registry:
         self._models[config.name] = lambda mcp_tools: factory(config, mcp_tools)
 
     def model(
-        self, name: str, mcp_tools: Optional[MCPTools] = None
+        self, name: str, mcp_tools: Optional[MCPServer] = None
     ) -> Model:
         factory = self._model_helper(name)
         if not factory:
@@ -62,7 +62,7 @@ class Registry:
         for name in self._models:
             result.append(name)
 
-def register_models2(registry: Registry) -> None:
+def register_models(registry: Registry) -> None:
     config_files = app_configuration["model_config_files"]
     credentials_files = app_configuration["model_credentials_files"]
 

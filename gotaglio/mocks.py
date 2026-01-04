@@ -1,7 +1,7 @@
 import json
 from typing import Any, Callable, Optional
 
-from .mcp_tools import CustomModelConfig, MCPTools, Model
+from .mcp_tools import CustomModelConfig, MCPServer, Model
 from .registry import Registry
 
 
@@ -20,7 +20,7 @@ class Fails(Model):
         )
         registry.register_custom_model(cls, configuration)
 
-    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPTools]):
+    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPServer]):
         self._expected = configuration.parameters
 
     async def infer(self, messages, context: dict[str, Any] | None = None):
@@ -44,7 +44,7 @@ class Flakey(Model):
         )
         registry.register_custom_model(cls, configuration)
     
-    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPTools]):
+    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPServer]):
         self._counter = -1
         self._expected = configuration.parameters
 
@@ -75,7 +75,7 @@ class Perfect(Model):
         )
         registry.register_custom_model(cls, configuration)
 
-    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPTools]):
+    def __init__(self, configuration: CustomModelConfig, mcp_tools: Optional[MCPServer]):
         self._expected = configuration.parameters
 
     async def infer(self, messages, context: dict[str, Any] | None = None):

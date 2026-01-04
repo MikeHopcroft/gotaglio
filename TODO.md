@@ -2,29 +2,39 @@
 
 gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.name=fails
 
+* MCP sample
+  * Write explanations
+  * Formatter shouldn't print the assistant message twice
+  * Is model side-effecting the messages from the prepare stage?
+    * It would seem so.
+    * Should model.infer() side-effect messages (so caller would have to to copy)
+    * Should model.infer() copy and return messages?
+  * Model has some console spew
+  * Test calc, dag, menu - update README for samples
+* Remove mcp dependency - keep factmcp
+* Allow multiple MCPs passed to models
 * Design challenge:
-  * Models must be constructed before being added to the Registry
+  * x Models must be constructed before being added to the Registry
   * Model constructors take MCP server lists
-  * We don't know the MCP servers at the time the models are constructed.
-  * IDEA: register classes or factories instead of instances
-    * registry.model(glom(config, "infer.model.name"))
-    * registry.model(glom(config, "infer.model.name"), mcps)
-  * Will likely need to move away from model's self-registering in the constructor
-  * Will need registry to store model config along with factory
+  * x We don't know the MCP servers at the time the models are constructed.
+  * x IDEA: register classes or factories instead of instances
+    * x registry.model(glom(config, "infer.model.name"))
+    * x registry.model(glom(config, "infer.model.name"), mcps)
+  * x Will likely need to move away from model's self-registering in the constructor
+  * x Will need registry to store model config along with factory
   * Opportunity to merge config from user
 * Design challenge:
-  * Why does the registry exist?
-  * Abstract model names to endpoint, deployment, api version, etc.
-  * Abstract away vendor and API differences
-  * Abstract away authentication differences
-  * ISSUE: a pipeline might need two instances of the same model, with different parameters
-    * MCP servers
-    * temperature
-* Integrate new models into notebooks (calc.ipynb is currently broken)
-* Remove mcp dependency - keep factmcp
-* Fix calculator example
-* OAuth support
-* Tools and MCP support
+  * x Why does the registry exist?
+  * x Abstract model names to endpoint, deployment, api version, etc.
+  * x Abstract away vendor and API differences
+  * x Abstract away authentication differences
+  * x ISSUE: a pipeline might need two instances of the same model, with different parameters
+    * x MCP servers
+    * x temperature
+* x Integrate new models into notebooks (calc.ipynb is currently broken)
+* x Fix calculator example
+* x OAuth support
+* x Tools and MCP support
 * One-step pipeline helper? What about formatter?
 * Document formatting expand/collapse in markdown
 * compare.py format_status() needs to handle turns correctly
@@ -35,7 +45,7 @@ gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.nam
   * Issue is that source turn 5 might be in result turn 0 when turn_index==5 and isolated==True
 * @app.post("/api/infer") returns with succeeded == True even if exception raised
 * Model registration may be preventing tests from exiting cleanly
-  * Should only create a model when needed
+  * x Should only create a model when needed
   * Should close clients when finished
 * Massive concurrancy
   * Lift semaphore out of Director to allow matrix runs.

@@ -40,6 +40,7 @@ class CustomModelConfig(BaseModel):
 
 ModelConfig = Union[AzureFoundryModelConfig]
 
+MCPServer = FastMCP[Any]
 
 class MCPTools:
     def __init__(self, mcp: FastMCP[Any]):
@@ -132,9 +133,9 @@ class Model(ABC):
 
 
 class AzureFoundryModel(Model):
-    def __init__(self, config: AzureFoundryModelConfig, mcp_tools: Optional[MCPTools]):
+    def __init__(self, config: AzureFoundryModelConfig, mcp_server: Optional[MCPServer]):
         self._config = config
-        self._mcp_tools = mcp_tools
+        self._mcp_tools = MCPTools(mcp_server) if mcp_server else None
         self._tools = None
 
         # Get a token provider using your default Azure credentials.
@@ -237,4 +238,4 @@ class AzureFoundryModel(Model):
         return self._client
 
 
-ModelFactory = Callable[[Optional[MCPTools]], Model]
+ModelFactory = Callable[[Optional[MCPServer]], Model]
