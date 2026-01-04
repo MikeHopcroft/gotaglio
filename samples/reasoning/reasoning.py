@@ -1,4 +1,3 @@
-from fastmcp import FastMCP
 from glom import glom
 import os
 from rich.text import Text
@@ -23,30 +22,7 @@ from gotaglio.pipeline import Internal, Prompt
 from gotaglio.shared import build_template
 from gotaglio.summarize import keywords_column
 
-
-def create_mcp_server():
-    # Create an MCP server
-    # Note: json_response should be passed to run() when starting the server remotely
-    # mcp.run(json_response=True)
-    # mcp.run("stdio", json_response=True)
-    mcp = FastMCP("Demo")
-
-    # Add an addition tool
-    @mcp.tool()
-    def stage1(a: str) -> str:
-        """Run stage one processing"""
-        print(f'============> stage1("{a}")')
-        return a[::-1]
-
-
-    # Encode a string
-    @mcp.tool()
-    def stage2(a: str) -> str:
-        """Run stage two processing"""
-        print(f'============> stage2("{a}")')
-        return a.upper() # + '!' # uncomment to cause failure.
-
-    return mcp
+from mcp_server import mcp
 
 ###############################################################################
 #
@@ -133,7 +109,7 @@ def stages(name, config: Configuration, registry):
     # By creating the model here, we ensure that any errors, such as a bad
     # model name or configuration issues, are caught before the stage functions
     # are run.
-    mcp = create_mcp_server()
+    # mcp = create_mcp_server()
     model = registry.model(glom(config, "infer.model.name"), mcp)
 
     # Define the pipeline stage functions. Each stage function is a coroutine

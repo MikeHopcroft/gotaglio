@@ -32,11 +32,12 @@ def format(
 
         console.print(f"## Run: {runlog['uuid']}")
 
-        diffs = diff_configs(spec.configuration, runlog["metadata"]["pipeline"]["config"])
+        diffs = diff_configs(
+            spec.configuration, runlog["metadata"]["pipeline"]["config"]
+        )
         lines = [f"* {k}: {v1} => {v2}" for k, v1, v2 in diffs]
         console.print("**Configuration deltas:**\n")
         console.print("\n".join(lines))
-
 
         results = runlog["results"]
         if len(results) == 0:
@@ -124,22 +125,29 @@ def format_messages(console, messages, collapse: list[str] | None = None):
     """
     for m in messages:
         if m["role"] == "assistant" or m["role"] == "system" or m["role"] == "tool":
-            console.print(f"**{m['role']}:**")
+            if m["role"] == "tool":
+                console.print(f"**{m['role']}({m['tool_call_id']}):**")
+            else:
+                console.print(f"**{m['role']}:**")
             if "tool_calls" in m:
-                console.print("Model made tool calls:")
+                # console.print("Model made tool calls:")
                 for tool_call in m["tool_calls"]:
-                    console.print(f"- Tool: { glom(tool_call, 'function.name')}")
-                    console.print(f"  Arguments: {glom(tool_call, 'function.arguments')}")
-            should_collapse = (
-                collapse
-                and m["role"] in collapse
-                and large_text_heuristic(m["content"])
-            )
-            if should_collapse:
-                console.print("<details>\n<summary>Click to expand</summary>\n")
-            format_response(console, m["content"])
-            if should_collapse:
-                console.print("\n</details>\n&nbsp;  \n")
+                    console.print(f"- tool: {glom(tool_call, 'function.name')},")
+                    console.print(f" id: {glom(tool_call, 'id')},")
+                    console.print(
+                        f" arguments: {glom(tool_call, 'function.arguments')}"
+                    )
+            else:
+                should_collapse = (
+                    collapse
+                    and m["role"] in collapse
+                    and large_text_heuristic(m["content"])
+                )
+                if should_collapse:
+                    console.print("<details>\n<summary>Click to expand</summary>\n")
+                format_response(console, m["content"])
+                if should_collapse:
+                    console.print("\n</details>\n&nbsp;  \n")
         elif m["role"] == "user":
             console.print(f"**{m['role']}:** _{m['content']}_")
         console.print()
@@ -148,7 +156,7 @@ def format_messages(console, messages, collapse: list[str] | None = None):
 def format_response(console, value):
     if isinstance(value, dict):
         console.print("```json")
-        console.print(value )
+        console.print(value)
         console.print("```")
     else:
         console.print(str(value))

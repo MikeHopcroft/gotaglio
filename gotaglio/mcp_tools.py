@@ -85,6 +85,7 @@ class MCPTools:
                     "parameters": tool.inputSchema,
                 },
             }
+            # print(f"Converted MCP tool to OpenAI tool: {openai_tool}")
             openai_tools.append(openai_tool)
 
         return openai_tools
@@ -181,7 +182,7 @@ class AzureFoundryModel(Model):
                             function_name = tool_call.function.name  # type: ignore[union-attr]
                             function_args = json.loads(tool_call.function.arguments)  # type: ignore[union-attr]
 
-                            print(f"Calling tool: {function_name}({function_args})")
+                            # print(f"Calling tool: {function_name}({function_args})")
                             result = await mcp_tools.invoke_tool(
                                 function_name, function_args
                             )
@@ -225,9 +226,9 @@ class AzureFoundryModel(Model):
                     # print(f"Using tools: {self._tools}")
             else:
                 self._tools = None
-            print(
-                f"Creating AzureOpenAI client: {self._config.endpoint}, deployment: {self._config.deployment}"
-            )
+            # print(
+            #     f"Creating AzureOpenAI client: {self._config.endpoint}, deployment: {self._config.deployment}"
+            # )
             self._client = openai.AzureOpenAI(
                 azure_endpoint=self._config.endpoint,
                 api_version=self._config.api,
