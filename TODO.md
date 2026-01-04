@@ -2,8 +2,26 @@
 
 gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.name=fails
 
+* Design challenge:
+  * Models must be constructed before being added to the Registry
+  * Model constructors take MCP server lists
+  * We don't know the MCP servers at the time the models are constructed.
+  * IDEA: register classes or factories instead of instances
+    * registry.model(glom(config, "infer.model.name"))
+    * registry.model(glom(config, "infer.model.name"), mcps)
+  * Will likely need to move away from model's self-registering in the constructor
+  * Will need registry to store model config along with factory
+  * Opportunity to merge config from user
+* Design challenge:
+  * Why does the registry exist?
+  * Abstract model names to endpoint, deployment, api version, etc.
+  * Abstract away vendor and API differences
+  * Abstract away authentication differences
+  * ISSUE: a pipeline might need two instances of the same model, with different parameters
+    * MCP servers
+    * temperature
 * Integrate new models into notebooks (calc.ipynb is currently broken)
-* Remove factmcp dependency
+* Remove mcp dependency - keep factmcp
 * Fix calculator example
 * OAuth support
 * Tools and MCP support

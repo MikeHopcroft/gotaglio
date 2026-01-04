@@ -11,7 +11,7 @@ from fastmcp import FastMCP
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import TypeAdapter
 
-from gotaglio.mcp_tools import MCPTools, ModelConfig, Registry2, register_models2
+from gotaglio.mcp_tools import AzureFoundryModel, MCPTools, ModelConfig
 
 
 raw_config = [
@@ -70,22 +70,17 @@ def create_mcp_server():
 
 
 async def run_test():
-    registry = Registry2()
+    mcp = create_mcp_server()
+    mcp_tools = MCPTools(mcp)
 
     adapter = TypeAdapter(list[ModelConfig])
     validated_configs = adapter.validate_python(raw_config)
     print("Validated model configurations successfully.")
 
     for config in validated_configs:
-        registry.register_standard_model(config)
-
-    mcp = create_mcp_server()
-    mcp_tools = MCPTools(mcp)
-
-    for config in validated_configs:
         print("=" * 40)
         print(f"Testing model: {config.name}")
-        model = registry.model(config.name, mcp_tools)
+        model = AzureFoundryModel(config, mcp_tools=mcp_tools)
         messages: list[ChatCompletionMessageParam] = [
             {
                 "role": "user",

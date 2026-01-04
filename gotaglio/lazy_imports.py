@@ -16,7 +16,6 @@ class LazyImport:
 
 # Lazy imports for heavy dependencies
 openai = LazyImport("openai")
-# openai_types_chat = LazyImport("openai.types.chat")
 azure_ai_inference = LazyImport("azure.ai.inference")
 azure_core_credentials = LazyImport("azure.core.credentials")
 azure_identity = LazyImport("azure.identity")
