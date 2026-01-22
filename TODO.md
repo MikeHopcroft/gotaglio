@@ -2,6 +2,7 @@
 
 gotag serve menu prepare.template=samples\menu\data\template.txt infer.model.name=fails
 
+* warning: The package `azure-ai-inference==1.0.0b9` does not have an extra named `aio`
 * Remove mcp dependency - keep factmcp
 * Allow multiple MCPs passed to models
 * Consider library like langchain or LiteLLM to abstract out how tool results are returned.

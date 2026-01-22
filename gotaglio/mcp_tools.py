@@ -1,14 +1,17 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from fastmcp import FastMCP, Client
 import json
 from pydantic import BaseModel, Field
 from typing import Any, Callable, cast, Optional, Literal, Union, TYPE_CHECKING
 
-# if TYPE_CHECKING:
-from openai.types.chat import ChatCompletionMessageParam
+if TYPE_CHECKING:
+    from openai import AzureOpenAI
+    from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 
 from .lazy_imports import azure_identity as aid, openai
 from .shared import format_list, read_data_file
+
 
 
 class KeyAuth(BaseModel):
@@ -116,7 +119,7 @@ class MCPTools:
                 if hasattr(item, "text")
             )
         else:
-            return json.dumps(result, ensure_ascii=False)
+            return json.dumps(result.content, ensure_ascii=False)
 
 
 class Model(ABC):
@@ -145,7 +148,7 @@ class AzureFoundryModel(Model):
             aid.DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
         )
 
-        self._client = None
+        self._client: AzureOpenAI | None = None
 
     async def infer(
         self, messages: list[ChatCompletionMessageParam], context=None
@@ -155,7 +158,7 @@ class AzureFoundryModel(Model):
             client = await self._lazy_get_client()
             for _ in range(MAX_STEPS):
 
-                resp = client.chat.completions.create(
+                resp: ChatCompletion = client.chat.completions.create(  # type: ignore[assignment]
                     model=self._config.deployment,  # Use the deployment name for the model
                     messages=messages,
                     **(
@@ -173,9 +176,8 @@ class AzureFoundryModel(Model):
                         )
                     async with self._mcp_tools as mcp_tools:
                         # 1. Append assistant message WITH tool_calls
-                        messages.append(
-                            cast(ChatCompletionMessageParam, msg.model_dump())
-                        )
+                        message: ChatCompletionMessageParam = msg.model_dump() # type: ignore[assignment]
+                        messages.append(message)
 
                         # 2. Execute each tool call and append results
                         for tool_call in msg.tool_calls:
@@ -218,7 +220,7 @@ class AzureFoundryModel(Model):
         # the API key in logs.
         return {k: v for k, v in self._config.model_dump().items() if k != "key"}
 
-    async def _lazy_get_client(self):
+    async def _lazy_get_client(self) -> AzureOpenAI:
         if self._client is None:
             if self._mcp_tools:
                 async with self._mcp_tools:

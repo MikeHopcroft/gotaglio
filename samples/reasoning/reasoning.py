@@ -19,6 +19,7 @@ from gotaglio.pipeline_spec import (
     SummarizerSpec,
 )
 from gotaglio.pipeline import Internal, Prompt
+from gotaglio.registry import Registry
 from gotaglio.shared import build_template
 from gotaglio.summarize import keywords_column
 
@@ -72,7 +73,7 @@ configuration = {
 # Stage Functions
 #
 ###############################################################################
-def stages(name, config: Configuration, registry):
+def stages(name, config: Configuration, registry: Registry):
     """
     Defines the structure of a simple, linear pipeline with four stages:
       **prepare** - creates the system prompt and user messages for the model
@@ -137,14 +138,17 @@ def stages(name, config: Configuration, registry):
 
     # Stage 2: Invoke the model to generate a response
     async def infer(context: dict[str, Any], turn_index: int, isolated_turn: bool):
-        return await model.infer(context["stages"]["prepare"], context)
+        # copy context["stages"]["prepare"] to avoid mutation
+        messages = list(context["stages"]["prepare"])
+        result = await model.infer(messages, context)
+        return {"result": result, "messages": messages}
 
     # Stage 3: Attempt to extract a numerical answer from the model response.
     # Note that this method will raise an exception if the response is not
     # a number.
     async def extract(context: dict[str, Any], turn_index: int, isolated_turn: bool):
         with ExceptionContext(f"Extracting string answer from LLM response."):
-            return str(context["stages"]["infer"])
+            return str(context["stages"]["infer"]["result"])
 
     # Stage 4: Compare the model response to the expected answer.
     async def assess(context: dict[str, Any], turn_index: int, isolated_turn: bool):

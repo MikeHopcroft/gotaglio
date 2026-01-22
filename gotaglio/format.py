@@ -102,10 +102,10 @@ def format_one_turn(spec, formatter_spec, console, index, result, turn_result):
             formatter_spec.format_turn(console, index, result)
         else:
             format_messages(
-                console, turn_result["stages"]["prepare"], collapse=["system"]
+                console, turn_result["stages"]["infer"]["messages"], collapse=["system", "tool"]
             )
-            console.print(f"**assistant:**")
-            format_response(console, turn_result["stages"]["extract"])
+            # console.print(f"**assistant:**")
+            # format_response(console, turn_result["stages"]["extract"])
             console.print()
 
         console.print()
